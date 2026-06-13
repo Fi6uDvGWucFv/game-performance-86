@@ -1,30 +1,42 @@
 import logging
 
-# Set up logging configuration
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure the logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('game_performance.log'),
+        logging.StreamHandler()
+    ]
+)
 
-class Logger:
-    def __init__(self, name):
-        self.logger = logging.getLogger(name)
+def log_performance_metrics(fps, memory_usage, frame_time):
+    """
+    Logs game performance metrics.
 
-    def debug(self, message):
-        self.logger.debug(message)
+    Parameters:
+    fps (int): Frames per second
+    memory_usage (int): Memory usage in MB
+    frame_time (float): Time taken to render a frame in ms
+    """
+    logging.info(f'FPS: {fps}, Memory Usage: {memory_usage} MB, Frame Time: {frame_time:.2f} ms')
 
-    def info(self, message):
-        self.logger.info(message)
 
-    def warning(self, message):
-        self.logger.warning(message)
+def log_error(message):
+    """
+    Logs an error message.
 
-    def error(self, message):
-        self.logger.error(message)
+    Parameters:
+    message (str): The error message to log
+    """
+    logging.error(message)
 
-    def critical(self, message):
-        self.logger.critical(message)
 
-# Example usage
-if __name__ == '__main__':
-    log = Logger(__name__)
-    log.info('This is an info message')
-    log.error('This is an error message')
+def log_warning(message):
+    """
+    Logs a warning message.
+
+    Parameters:
+    message (str): The warning message to log
+    """
+    logging.warning(message)
