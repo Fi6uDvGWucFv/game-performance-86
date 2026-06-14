@@ -1,35 +1,29 @@
 import json
 import os
 
+# Default configuration values
 DEFAULT_CONFIG = {
-    'resolution': '1920x1080',
-    'fullscreen': True,
-    'volume': 50,
-    'controls': {
-        'move_up': 'W',
-        'move_down': 'S',
-        'move_left': 'A',
-        'move_right': 'D',
-    }
+    'screen_width': 1920,
+    'screen_height': 1080,
+    'fps': 60,
+    'sound_enabled': True,
+    'music_volume': 0.5,
+    'effects_volume': 0.5
 }
 
-class ConfigLoader:
-    def __init__(self, config_file='config.json'):
-        self.config_file = config_file
-        self.config = self.load_config()
-
-    def load_config(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                user_config = json.load(f)
-            return {**DEFAULT_CONFIG, **user_config}
+def load_config(file_path):
+    """Load configuration from a JSON file or return defaults if the file does not exist."""
+    # Check if the file exists
+    if not os.path.isfile(file_path):
         return DEFAULT_CONFIG
-
-    def get_config(self):
-        return self.config
-
-# Usage Example
-if __name__ == '__main__':
-    config_loader = ConfigLoader()
-    current_config = config_loader.get_config()
-    print(current_config)
+    
+    # Load the configuration file
+    with open(file_path, 'r') as f:
+        try:
+            config = json.load(f)
+        except json.JSONDecodeError:
+            return DEFAULT_CONFIG
+    
+    # Merge the default config with the loaded one
+    merged_config = {**DEFAULT_CONFIG, **config}
+    return merged_config
