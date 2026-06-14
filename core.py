@@ -1,26 +1,21 @@
-import time
-import requests
-from requests.exceptions import RequestException
+import random
+import string
 
-def retry_request(url, max_retries=3, delay=1):
-    """Perform a GET request with retries on failure."""
-    attempt = 0
-    while attempt < max_retries:
+# Constants for user input validation
+MIN_LENGTH = 3
+MAX_LENGTH = 15
+
+# Function to validate input for player names
+def validate_player_name(name):
+    if not (MIN_LENGTH <= len(name) <= MAX_LENGTH):
+        raise ValueError(f'Name must be between {MIN_LENGTH} and {MAX_LENGTH} characters.')
+    if not name.isalnum():
+        raise ValueError('Name must contain only alphanumeric characters.')
+    return True
+
+# Main processing loop for the game
+def main_loop():
+    players = []
+    while True:
         try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
-            return response.json()  # Return JSON response
-        except RequestException as e:
-            attempt += 1
-            print(f'Attempt {attempt} failed: {e}')
-            if attempt < max_retries:
-                time.sleep(delay)  # Wait before retrying
-            else:
-                print('Max retries reached. Request failed.')
-                return None
-
-# Example usage
-if __name__ == '__main__':
-    url = 'https://api.example.com/data'
-    result = retry_request(url)
-    print(result)
+            player_name = input('Enter player name (or type 
