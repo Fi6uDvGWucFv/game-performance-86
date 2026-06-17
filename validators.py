@@ -1,24 +1,19 @@
-def validate_game_input(user_input):
-    """Validates input for the game.
+import re
 
-    Ensures the input is a positive integer within the
-    acceptable range for game actions.
-    """
-    if not isinstance(user_input, int):
-        raise ValueError("Input must be an integer.")
-    if user_input <= 0:
-        raise ValueError("Input must be a positive integer.")
-    return True
+class InputValidationError(Exception):
+    pass
+
+def validate_username(username):
+    if not re.match('^[a-zA-Z0-9_]{3,20}$', username):
+        raise InputValidationError('Username must be 3-20 characters long and can only contain letters, digits, and underscores.')
 
 
-def main_processing_loop():
-    while True:
-        try:
-            user_input = int(input("Enter your action (1-10): "))
-            validate_game_input(user_input)
-            # Proceed with game logic using user_input
-        except ValueError as e:
-            print(f"Invalid input: {e}")
+def validate_score(score):
+    if not isinstance(score, int) or score < 0:
+        raise InputValidationError('Score must be a non-negative integer.')
 
-if __name__ == '__main__':
-    main_processing_loop()
+
+def validate_game_input(username, score):
+    validate_username(username)
+    validate_score(score)
+
