@@ -4,33 +4,34 @@ import os
 DEFAULT_CONFIG = {
     'resolution': '1920x1080',
     'fullscreen': True,
-    'volume': 50,
-    'controls': {'forward': 'W', 'backward': 'S', 'left': 'A', 'right': 'D'},
-    'difficulty': 'normal'
+    'volume': 80,
+    'controls': {
+        'move_forward': 'W',
+        'move_backward': 'S',
+        'turn_left': 'A',
+        'turn_right': 'D'
+    }
 }
 
 class ConfigLoader:
-    def __init__(self, config_file='config.json'):
-        self.config_file = config_file
-        self.config = DEFAULT_CONFIG.copy()
-        self.load_config()
+    def __init__(self, filename='config.json'):
+        self.filename = filename
+        self.config = self.load_config()
 
     def load_config(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                user_config = json.load(f)
-                self.config.update(user_config)
+        if not os.path.exists(self.filename):
+            return DEFAULT_CONFIG
+        with open(self.filename, 'r') as file:
+            try:
+                config = json.load(file)
+            except json.JSONDecodeError:
+                return DEFAULT_CONFIG
+        return {**DEFAULT_CONFIG, **config}
 
     def get(self, key, default=None):
         return self.config.get(key, default)
 
     def set(self, key, value):
         self.config[key] = value
-
-    def save(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self.config, f, indent=4)
-
-if __name__ == '__main__':
-    config_loader = ConfigLoader()
-    config_loader.save()  # Save default on init if no config
+        with open(self.filename, 'w') as file:
+            json.dump(self.config, file, indent=4)
