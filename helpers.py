@@ -1,43 +1,32 @@
-import json
-from typing import Any, Dict, List
+import random
+import math
 
+# Generate a random float within a range
 
-def load_game_data(file_path: str) -> Dict[str, Any]:
-    """
-    Loads game data from a JSON file.
-    
-    Args:
-        file_path (str): The path to the JSON file containing game data.
-    
-    Returns:
-        Dict[str, Any]: The parsed JSON data.
-    """
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    return data
+def random_float(min_val: float, max_val: float) -> float:
+    """Returns a random float between min_val and max_val."""
+    return random.uniform(min_val, max_val)
 
+# Calculate distance between two points
 
-def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
-    """
-    Saves game data to a JSON file.
-    
-    Args:
-        file_path (str): The path to the JSON file where data will be saved.
-        data (Dict[str, Any]): The game data to save.
-    """
-    with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)
+def calculate_distance(x1: float, y1: float, x2: float, y2: float) -> float:
+    """Returns the Euclidean distance between two points."""
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
+# Clamp a value within a minimum and maximum
 
-def filter_players_by_score(players: List[Dict[str, Any]], threshold: float) -> List[Dict[str, Any]]:
-    """
-    Filters players based on their game score.
-    
-    Args:
-        players (List[Dict[str, Any]]): A list of player data.
-        threshold (float): The score threshold for filtering.
-    
-    Returns:
-        List[Dict[str, Any]]: A list of players with scores above the threshold.
-    """
-    return [player for player in players if player.get('score', 0) > threshold]
+def clamp(value: float, min_val: float, max_val: float) -> float:
+    """Clamps value to be within the min_val and max_val range."""
+    return max(min_val, min(value, max_val))
+
+# Generate a random integer within a specified range
+
+def random_int(min_val: int, max_val: int) -> int:
+    """Returns a random integer between min_val and max_val."""
+    return random.randint(min_val, max_val)
+
+# Check if a number is even
+
+def is_even(number: int) -> bool:
+    """Returns True if the number is even, else False."""
+    return number % 2 == 0
