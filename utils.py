@@ -1,32 +1,32 @@
-import json
-
-class GameDataException(Exception):
-    pass
+import random
+import numpy as np
 
 
-def load_game_data(file_path):
-    """Load game data from a JSON file."""
-    try:
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-            return data
-    except FileNotFoundError:
-        raise GameDataException(f'File not found: {file_path}')
-    except json.JSONDecodeError:
-        raise GameDataException(f'Error decoding JSON from: {file_path}')
+def generate_random_points(num_points, x_range, y_range):
+    """Generate a list of random points within specified ranges."""
+    points = []
+    for _ in range(num_points):
+        x = random.uniform(*x_range)
+        y = random.uniform(*y_range)
+        points.append((x, y))
+    return points
 
 
-def save_game_data(data, file_path):
-    """Save game data to a JSON file."""
-    try:
-        with open(file_path, 'w') as file:
-            json.dump(data, file, indent=4)
-    except Exception as e:
-        raise GameDataException(f'Error saving data to {file_path}: {str(e)}')
+def calculate_distance(point1, point2):
+    """Calculate the Euclidean distance between two points."""
+    return np.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
 
 
-def update_game_data(file_path, updates):
-    """Update specific fields in the game data."""
-    data = load_game_data(file_path)
-    data.update(updates)
-    save_game_data(data, file_path)
+def clamp(value, min_value, max_value):
+    """Clamp the value to be within min_value and max_value."""
+    return max(min(value, max_value), min_value)
+
+
+def lerp(start, end, t):
+    """Linearly interpolate between start and end by t."""
+    return start + (end - start) * t
+
+
+def random_choice(choices):
+    """Return a random choice from a list."""
+    return random.choice(choices)
