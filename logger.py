@@ -1,42 +1,36 @@
 import logging
+import os
+from logging.handlers import RotatingFileHandler
 
-# Configure the logging settings
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('game_performance.log'),
-        logging.StreamHandler()
-    ]
-)
-
-def log_performance_metrics(fps, memory_usage, frame_time):
+def setup_logger(log_file='game_performance.log', max_bytes=5*1024*1024, backup_count=5):
     """
-    Logs game performance metrics.
-
-    Parameters:
-    fps (int): Frames per second
-    memory_usage (int): Memory usage in MB
-    frame_time (float): Time taken to render a frame in ms
+    Sets up a rotating logger.
+    
+    Args:
+        log_file (str): Name of the log file.
+        max_bytes (int): Max bytes before rotation occurs.
+        backup_count (int): Number of backup files to keep.
     """
-    logging.info(f'FPS: {fps}, Memory Usage: {memory_usage} MB, Frame Time: {frame_time:.2f} ms')
+    logger = logging.getLogger('game_performance_logger')
+    logger.setLevel(logging.DEBUG)
 
+    # Create handlers
+    if not logger.hasHandlers():
+        # Create a rotating file handler
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+        handler.setLevel(logging.DEBUG)
 
-def log_error(message):
-    """
-    Logs an error message.
+        # Create a formatter and set it for the handler
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
 
-    Parameters:
-    message (str): The error message to log
-    """
-    logging.error(message)
+        # Add the handler to the logger
+        logger.addHandler(handler)
 
+    return logger
 
-def log_warning(message):
-    """
-    Logs a warning message.
-
-    Parameters:
-    message (str): The warning message to log
-    """
-    logging.warning(message)
+if __name__ == '__main__':
+    log = setup_logger()
+    log.debug('This is a debug message.')
+    log.info('Logger setup complete.')
