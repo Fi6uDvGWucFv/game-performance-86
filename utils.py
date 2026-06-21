@@ -1,32 +1,44 @@
-import random
-import numpy as np
+from typing import List, Dict
+
+def calculate_average(scores: List[int]) -> float:
+    """
+    Calculate the average of a list of scores.
+
+    Args:
+        scores (List[int]): A list of integer scores.
+
+    Returns:
+        float: The average score.
+    """
+    if not scores:
+        return 0.0
+    return sum(scores) / len(scores)
 
 
-def generate_random_points(num_points, x_range, y_range):
-    """Generate a list of random points within specified ranges."""
-    points = []
-    for _ in range(num_points):
-        x = random.uniform(*x_range)
-        y = random.uniform(*y_range)
-        points.append((x, y))
-    return points
+def format_scoreboard(scores: Dict[str, int]) -> str:
+    """
+    Format a scoreboard dictionary into a string.
+
+    Args:
+        scores (Dict[str, int]): A dictionary with player names as keys and their scores as values.
+
+    Returns:
+        str: A formatted string of scores.
+    """
+    formatted_scores = [f'{player}: {score}' for player, score in scores.items()]
+    return '\n'.join(formatted_scores)
 
 
-def calculate_distance(point1, point2):
-    """Calculate the Euclidean distance between two points."""
-    return np.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+def find_top_scorer(scores: Dict[str, int]) -> str:
+    """
+    Identify the player with the highest score.
 
+    Args:
+        scores (Dict[str, int]): A dictionary with player names as keys and their scores as values.
 
-def clamp(value, min_value, max_value):
-    """Clamp the value to be within min_value and max_value."""
-    return max(min(value, max_value), min_value)
-
-
-def lerp(start, end, t):
-    """Linearly interpolate between start and end by t."""
-    return start + (end - start) * t
-
-
-def random_choice(choices):
-    """Return a random choice from a list."""
-    return random.choice(choices)
+    Returns:
+        str: The name of the top scorer.
+    """
+    if not scores:
+        return "No players in the scoreboard."
+    return max(scores, key=scores.get)
