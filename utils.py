@@ -1,44 +1,19 @@
-from typing import List, Dict
+import time
+import requests
 
-def calculate_average(scores: List[int]) -> float:
-    """
-    Calculate the average of a list of scores.
+class NetworkError(Exception):
+    pass
 
-    Args:
-        scores (List[int]): A list of integer scores.
-
-    Returns:
-        float: The average score.
-    """
-    if not scores:
-        return 0.0
-    return sum(scores) / len(scores)
-
-
-def format_scoreboard(scores: Dict[str, int]) -> str:
-    """
-    Format a scoreboard dictionary into a string.
-
-    Args:
-        scores (Dict[str, int]): A dictionary with player names as keys and their scores as values.
-
-    Returns:
-        str: A formatted string of scores.
-    """
-    formatted_scores = [f'{player}: {score}' for player, score in scores.items()]
-    return '\n'.join(formatted_scores)
-
-
-def find_top_scorer(scores: Dict[str, int]) -> str:
-    """
-    Identify the player with the highest score.
-
-    Args:
-        scores (Dict[str, int]): A dictionary with player names as keys and their scores as values.
-
-    Returns:
-        str: The name of the top scorer.
-    """
-    if not scores:
-        return "No players in the scoreboard."
-    return max(scores, key=scores.get)
+def retry_request(url, retries=3, delay=1):
+    """Attempts to send a GET request to the given URL with retry logic."""
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for bad responses
+            return response.json()  # Return the JSON response
+        except requests.exceptions.RequestException as e:
+            if attempt < retries - 1:
+                print(f'Attempt {attempt + 1} failed: {e}. Retrying in {delay} seconds...')
+                time.sleep(delay)
+            else:
+                raise NetworkError(f'Failed to fetch data after {retries} attempts') from e
