@@ -1,32 +1,33 @@
-import random
-import math
+def optimize_performance(data):
+    # Reduce unnecessary calculations
+    optimized_data = []
+    seen = set()
+    for item in data:
+        if item not in seen:
+            seen.add(item)
+            optimized_data.append(item)
+    return optimized_data
 
-# Generate a random float within a range
 
-def random_float(min_val: float, max_val: float) -> float:
-    """Returns a random float between min_val and max_val."""
-    return random.uniform(min_val, max_val)
+def calculate_average(frames):
+    # Use more efficient calculation for average
+    return sum(frames) / len(frames) if frames else 0
 
-# Calculate distance between two points
 
-def calculate_distance(x1: float, y1: float, x2: float, y2: float) -> float:
-    """Returns the Euclidean distance between two points."""
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+def frame_rate_statistics(frames):
+    # Compute min, max and average frame rates
+    if not frames:
+        return {'min': 0, 'max': 0, 'average': 0}
+    min_frame = min(frames)
+    max_frame = max(frames)
+    average_frame = calculate_average(frames)
+    return {'min': min_frame, 'max': max_frame, 'average': average_frame}
 
-# Clamp a value within a minimum and maximum
 
-def clamp(value: float, min_val: float, max_val: float) -> float:
-    """Clamps value to be within the min_val and max_val range."""
-    return max(min_val, min(value, max_val))
+def log_performance(frames):
+    stats = frame_rate_statistics(frames)
+    print(f"Performance Stats - Min: {stats['min']}, Max: {stats['max']}, Average: {stats['average']}")
 
-# Generate a random integer within a specified range
-
-def random_int(min_val: int, max_val: int) -> int:
-    """Returns a random integer between min_val and max_val."""
-    return random.randint(min_val, max_val)
-
-# Check if a number is even
-
-def is_even(number: int) -> bool:
-    """Returns True if the number is even, else False."""
-    return number % 2 == 0
+# Example Usage:
+# frames = [60, 55, 60, 70, 60, 55, 80]
+# log_performance(frames)
