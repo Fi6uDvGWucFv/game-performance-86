@@ -1,29 +1,26 @@
-def is_valid_player_name(name):
-    """
-    Validates the player name.
-    A valid player name must be between 3 and 16 characters long,
-    only contain alphanumeric characters, and cannot start with a number.
-    """
-    if not (3 <= len(name) <= 16):
-        return False
-    if not name.isalnum():
-        return False
-    if name[0].isdigit():
-        return False
-    return True
+import re
+
+def is_valid_username(username):
+    """Validate the username format."
+    # Check for length and allowed characters
+    return bool(re.match(r'^[A-Za-z0-9_]{3,25}$', username))
+
+
+def is_valid_email(email):
+    """Validate the email format."
+    # Check for standard email format
+    return bool(re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email))
 
 
 def is_valid_score(score):
-    """
-    Validates the player's score.
-    A valid score must be a non-negative integer.
-    """
+    """Validate the score is a non-negative integer."
     return isinstance(score, int) and score >= 0
 
 
-def is_valid_game_level(level):
-    """
-    Validates the game level.
-    The level must be a positive integer.
-    """
-    return isinstance(level, int) and level > 0
+def validate_game_data(data):
+    """Validate provided game data."
+    username_valid = is_valid_username(data.get('username', ''))
+    email_valid = is_valid_email(data.get('email', ''))
+    score_valid = is_valid_score(data.get('score', -1))
+    
+    return username_valid, email_valid, score_valid
