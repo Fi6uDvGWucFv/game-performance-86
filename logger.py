@@ -1,32 +1,59 @@
 import logging
 
-# Configure the logger for the game performance module
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 class GameLogger:
-    """A simple logger for game performance monitoring."""
-    def __init__(self, name):
+    """
+    A simple logger class for gaming applications.
+    """
+
+    def __init__(self, name: str) -> None:
+        """
+        Initializes the GameLogger with a specific name.
+
+        :param name: The name of the logger.
+        """
         self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
-    def debug(self, msg):
-        """Log a debug message"""
-        self.logger.debug(msg)
+    def debug(self, message: str) -> None:
+        """
+        Logs a message with DEBUG level.
 
-    def info(self, msg):
-        """Log an info message"""
-        self.logger.info(msg)
+        :param message: The message to log.
+        """
+        self.logger.debug(message)
 
-    def warning(self, msg):
-        """Log a warning message"""
-        self.logger.warning(msg)
+    def info(self, message: str) -> None:
+        """
+        Logs a message with INFO level.
 
-    def error(self, msg):
-        """Log an error message"""
-        self.logger.error(msg)
+        :param message: The message to log.
+        """
+        self.logger.info(message)
 
-    def critical(self, msg):
-        """Log a critical message"""
-        self.logger.critical(msg)
+    def warning(self, message: str) -> None:
+        """
+        Logs a message with WARNING level.
 
-# Create a global logger instance for the module
-logger = GameLogger('GamePerformanceLogger')
+        :param message: The message to log.
+        """
+        self.logger.warning(message)
+
+    def error(self, message: str) -> None:
+        """
+        Logs a message with ERROR level.
+
+        :param message: The message to log.
+        """
+        self.logger.error(message)
+
+    def critical(self, message: str) -> None:
+        """
+        Logs a message with CRITICAL level.
+
+        :param message: The message to log.
+        """
+        self.logger.critical(message)
