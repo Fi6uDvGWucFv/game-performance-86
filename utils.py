@@ -1,19 +1,25 @@
-import time
-import requests
+import json
+from typing import Any, Dict, List
 
-class NetworkError(Exception):
-    pass
 
-def retry_request(url, retries=3, delay=1):
-    """Attempts to send a GET request to the given URL with retry logic."""
-    for attempt in range(retries):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
-            return response.json()  # Return the JSON response
-        except requests.exceptions.RequestException as e:
-            if attempt < retries - 1:
-                print(f'Attempt {attempt + 1} failed: {e}. Retrying in {delay} seconds...')
-                time.sleep(delay)
-            else:
-                raise NetworkError(f'Failed to fetch data after {retries} attempts') from e
+def load_game_data(file_path: str) -> Dict[str, Any]:
+    """Load game data from a JSON file."""
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+            return data
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file {file_path} was not found.")
+    except json.JSONDecodeError:
+        raise ValueError(f"The file {file_path} contains invalid JSON.")
+
+
+def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
+    """Save game data to a JSON file."""
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def filter_game_scores(scores: List[Dict[str, Any]], min_score: int) -> List[Dict[str, Any]]:
+    """Filter game scores above a minimum threshold."""
+    return [score for score in scores if score.get('score', 0) >= min_score]
