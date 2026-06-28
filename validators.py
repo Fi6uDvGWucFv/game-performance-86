@@ -1,26 +1,35 @@
-import re
+def is_positive_integer(value):
+    """
+    Check if the value is a positive integer.
+    """
+    return isinstance(value, int) and value > 0
 
-def is_valid_username(username):
-    """Validate the username format."
-    # Check for length and allowed characters
-    return bool(re.match(r'^[A-Za-z0-9_]{3,25}$', username))
+
+def is_non_empty_string(value):
+    """
+    Check if the value is a non-empty string.
+    """
+    return isinstance(value, str) and bool(value.strip())
 
 
 def is_valid_email(email):
-    """Validate the email format."
-    # Check for standard email format
-    return bool(re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email))
+    """
+    Validate the email format using a regex pattern.
+    """
+    import re
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email) is not None
 
 
-def is_valid_score(score):
-    """Validate the score is a non-negative integer."
-    return isinstance(score, int) and score >= 0
+def is_in_range(value, min_value, max_value):
+    """
+    Check if the value is within a specified range.
+    """
+    return isinstance(value, (int, float)) and min_value <= value <= max_value
 
 
-def validate_game_data(data):
-    """Validate provided game data."
-    username_valid = is_valid_username(data.get('username', ''))
-    email_valid = is_valid_email(data.get('email', ''))
-    score_valid = is_valid_score(data.get('score', -1))
-    
-    return username_valid, email_valid, score_valid
+def is_valid_game_rating(rating):
+    """
+    Validate the game rating between 0 and 10.
+    """
+    return is_in_range(rating, 0, 10)
