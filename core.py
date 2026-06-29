@@ -1,21 +1,32 @@
 import random
-import string
+from typing import List, Tuple, Optional
 
-# Constants for user input validation
-MIN_LENGTH = 3
-MAX_LENGTH = 15
+class Game:
+    def __init__(self, name: str, max_players: int) -> None:
+        self.name = name
+        self.max_players = max_players
+        self.players: List[str] = []
 
-# Function to validate input for player names
-def validate_player_name(name):
-    if not (MIN_LENGTH <= len(name) <= MAX_LENGTH):
-        raise ValueError(f'Name must be between {MIN_LENGTH} and {MAX_LENGTH} characters.')
-    if not name.isalnum():
-        raise ValueError('Name must contain only alphanumeric characters.')
-    return True
+    def add_player(self, player: str) -> Optional[str]:
+        if len(self.players) < self.max_players:
+            self.players.append(player)
+            return f'Player {player} added.'
+        return 'Cannot add player; max players reached.'
 
-# Main processing loop for the game
-def main_loop():
-    players = []
-    while True:
-        try:
-            player_name = input('Enter player name (or type 
+    def start_game(self) -> str:
+        if len(self.players) == 0:
+            return 'No players to start the game.'
+        return f'Game {self.name} started with players: {self.players}'
+
+    def get_winner(self) -> str:
+        if len(self.players) == 0:
+            return 'No players to determine a winner.'
+        winner = random.choice(self.players)
+        return f'The winner is {winner}!'
+
+if __name__ == '__main__':
+    game = Game('Adventure Quest', 4)
+    print(game.add_player('Alice'))
+    print(game.add_player('Bob'))
+    print(game.start_game())
+    print(game.get_winner())
