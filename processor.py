@@ -1,30 +1,29 @@
-import sys
-import re
+import time
+import numpy as np
 
-class InputValidationError(Exception):
-    pass
+class GameProcessor:
+    def __init__(self, game_data):
+        self.game_data = game_data
 
-def is_valid_input(user_input):
-    if not isinstance(user_input, str):
-        raise InputValidationError('Input must be a string.')
-    if len(user_input) == 0:
-        raise InputValidationError('Input cannot be empty.')
-    if not re.match('^[a-zA-Z0-9_]*$', user_input):
-        raise InputValidationError('Input contains invalid characters.')
-    return True
+    def optimize_performance(self):
+        start_time = time.time()
+        print('Optimizing game performance...')
+        self._reduce_memory_usage()
+        self._speed_up_processing()
+        end_time = time.time()
+        print(f'Optimization completed in {end_time - start_time:.2f} seconds.')
 
-def main_processing_loop():
-    while True:
-        user_input = input('Enter command: ')  # Get user input
-        try:
-            is_valid_input(user_input)  # Validate input
-            print(f'Input accepted: {user_input}')
-            # Proceed with the main logic of your game
-        except InputValidationError as e:
-            print(e)  # Display validation error message
-        except KeyboardInterrupt:
-            print('\nExiting the program.')
-            sys.exit(0)  # Graceful exit
+    def _reduce_memory_usage(self):
+        print('Reducing memory usage...')
+        self.game_data = np.array(self.game_data, dtype=np.float32)
 
+    def _speed_up_processing(self):
+        print('Speeding up processing...')
+        for i in range(len(self.game_data)):
+            self.game_data[i] *= 2  # Example processing
+
+# Sample usage
 if __name__ == '__main__':
-    main_processing_loop()
+    sample_data = [1, 2, 3, 4, 5]  # Simulated game data
+    processor = GameProcessor(sample_data)
+    processor.optimize_performance()
