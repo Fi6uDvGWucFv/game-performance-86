@@ -1,35 +1,31 @@
-def is_positive_integer(value):
+def is_valid_input(user_input):
     """
-    Check if the value is a positive integer.
+    Validates user input for the game.
+    Returns True if input is valid, else False.
     """
-    return isinstance(value, int) and value > 0
+    if not user_input:
+        print("Input cannot be empty.")
+        return False
+    if not user_input.isalnum():
+        print("Input must be alphanumeric.")
+        return False
+    if len(user_input) > 10:
+        print("Input must be 10 characters or less.")
+        return False
+    return True
 
+# Main processing loop where input validation would be applied
 
-def is_non_empty_string(value):
-    """
-    Check if the value is a non-empty string.
-    """
-    return isinstance(value, str) and bool(value.strip())
+def main_game_loop():
+    while True:
+        user_input = input("Enter your command: ")
+        if not is_valid_input(user_input):
+            continue  # Re-prompt for valid input
+        # Process valid input
+        print(f"Processing command: {user_input}")
+        # Break the loop (or implement game logic)
+        if user_input.lower() == 'exit':
+            break
 
-
-def is_valid_email(email):
-    """
-    Validate the email format using a regex pattern.
-    """
-    import re
-    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    return re.match(pattern, email) is not None
-
-
-def is_in_range(value, min_value, max_value):
-    """
-    Check if the value is within a specified range.
-    """
-    return isinstance(value, (int, float)) and min_value <= value <= max_value
-
-
-def is_valid_game_rating(rating):
-    """
-    Validate the game rating between 0 and 10.
-    """
-    return is_in_range(rating, 0, 10)
+if __name__ == '__main__':
+    main_game_loop()
