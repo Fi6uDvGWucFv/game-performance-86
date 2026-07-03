@@ -1,29 +1,22 @@
 import time
-import numpy as np
+import requests
+from requests.exceptions import RequestException
 
-class GameProcessor:
-    def __init__(self, game_data):
-        self.game_data = game_data
 
-    def optimize_performance(self):
-        start_time = time.time()
-        print('Optimizing game performance...')
-        self._reduce_memory_usage()
-        self._speed_up_processing()
-        end_time = time.time()
-        print(f'Optimization completed in {end_time - start_time:.2f} seconds.')
+def retry_request(url, max_retries=3, backoff_factor=0.5):
+    """Perform a network request with retry logic."""
+    retries = 0
+    while retries < max_retries:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # raise error for bad responses
+            return response.json()  # assuming we expect a JSON response
+        except RequestException as e:
+            retries += 1
+            wait_time = backoff_factor * (2 ** (retries - 1))
+            time.sleep(wait_time)  # wait before retrying
+            print(f'Retry {retries}/{max_retries} for {url} due to {e}')  # log retry
+    raise Exception(f'Max retries exceeded for {url}')
 
-    def _reduce_memory_usage(self):
-        print('Reducing memory usage...')
-        self.game_data = np.array(self.game_data, dtype=np.float32)
-
-    def _speed_up_processing(self):
-        print('Speeding up processing...')
-        for i in range(len(self.game_data)):
-            self.game_data[i] *= 2  # Example processing
-
-# Sample usage
-if __name__ == '__main__':
-    sample_data = [1, 2, 3, 4, 5]  # Simulated game data
-    processor = GameProcessor(sample_data)
-    processor.optimize_performance()
+# Example usage:
+# result = retry_request('http://example.com/api/data')
