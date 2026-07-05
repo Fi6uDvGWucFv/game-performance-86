@@ -1,31 +1,28 @@
-def is_valid_input(user_input):
-    """
-    Validates user input for the game.
-    Returns True if input is valid, else False.
-    """
-    if not user_input:
-        print("Input cannot be empty.")
+import re
+
+def is_valid_username(username: str) -> bool:
+    '''Validate the username for gaming accounts. Must be 3-15 characters long and alphanumeric.'''  
+    if not (3 <= len(username) <= 15):
         return False
-    if not user_input.isalnum():
-        print("Input must be alphanumeric.")
+    return bool(re.match('^[A-Za-z0-9]+$', username))
+
+
+def is_valid_email(email: str) -> bool:
+    '''Validate the email format for gaming accounts.'''  
+    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    return bool(re.match(email_regex, email))
+
+
+def is_valid_password(password: str) -> bool:
+    '''Validate the password. Must be at least 8 characters with at least one uppercase letter, one lowercase letter, one number, and one special character.'''  
+    if len(password) < 8:
         return False
-    if len(user_input) > 10:
-        print("Input must be 10 characters or less.")
+    if not re.search('[A-Z]', password):
+        return False
+    if not re.search('[a-z]', password):
+        return False
+    if not re.search('[0-9]', password):
+        return False
+    if not re.search('[!@#$%^&*(),.?":{}|<>]', password):
         return False
     return True
-
-# Main processing loop where input validation would be applied
-
-def main_game_loop():
-    while True:
-        user_input = input("Enter your command: ")
-        if not is_valid_input(user_input):
-            continue  # Re-prompt for valid input
-        # Process valid input
-        print(f"Processing command: {user_input}")
-        # Break the loop (or implement game logic)
-        if user_input.lower() == 'exit':
-            break
-
-if __name__ == '__main__':
-    main_game_loop()
