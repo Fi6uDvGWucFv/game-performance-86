@@ -1,43 +1,19 @@
-import numpy as np
+import time
+import requests
 
-def calculate_fps(frame_times):
-    '''Calculate frames per second from a list of frame times.'''
-    if not frame_times:
-        return 0
-    average_time = sum(frame_times) / len(frame_times)
-    fps = 1 / average_time if average_time > 0 else 0
-    return fps
+class NetworkError(Exception):
+    pass
 
-
-def optimize_sprite_rendering(sprites):
-    '''Optimize sprite rendering using spatial partitioning.'''
-    grid = {}  # Dictionary to hold sprites by grid cell
-    for sprite in sprites:
-        cell_key = (int(sprite.x // 64), int(sprite.y // 64))  # Assuming grid size of 64x64
-        if cell_key not in grid:
-            grid[cell_key] = []
-        grid[cell_key].append(sprite)
-    return grid
-
-
-def batch_render_sprites(sprites):
-    '''Batch render sprites for better performance.'''
-    grid = optimize_sprite_rendering(sprites)
-    for cell in grid.values():
-        # Assuming a render function exists that takes a list of sprites
-        render(cell)  # Render each batch of sprites in the same cell
-
-
-def smooth_motion(sprite, target_position, delta_time):
-    '''Smoothly interpolate a sprite's position towards a target.'''
-    speed = sprite.speed * delta_time
-    direction = np.array(target_position) - np.array([sprite.x, sprite.y])
-    distance = np.linalg.norm(direction)
-    if distance > speed:
-        direction = direction / distance  # Normalize direction
-        sprite.x += direction[0] * speed
-        sprite.y += direction[1] * speed
-    else:
-        sprite.x = target_position[0]
-        sprite.y = target_position[1]
-
+def retry_request(url, retries=3, delay=2):
+    """Attempt to make a GET request with retry logic."""
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for bad responses
+            return response.json()  # Assuming you want JSON data
+        except requests.RequestException as e:
+            if attempt == retries:
+                raise NetworkError(f'Network request failed after {retries} attempts')
+            else:
+                print(f'Attempt {attempt} failed: {e}. Retrying in {delay} seconds...')
+                time.sleep(delay)  # Wait before the next attempt
