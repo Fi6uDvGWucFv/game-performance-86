@@ -1,19 +1,44 @@
-import time
-import requests
+def calculate_fps(start_time, end_time, frame_count):
+    """
+    Calculate frames per second (FPS) based on time and frame count.
+    """
+    elapsed_time = end_time - start_time
+    if elapsed_time > 0:
+        return frame_count / elapsed_time
+    return 0
 
-class NetworkError(Exception):
-    pass
 
-def retry_request(url, retries=3, delay=2):
-    """Attempt to make a GET request with retry logic."""
-    for attempt in range(1, retries + 1):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
-            return response.json()  # Assuming you want JSON data
-        except requests.RequestException as e:
-            if attempt == retries:
-                raise NetworkError(f'Network request failed after {retries} attempts')
-            else:
-                print(f'Attempt {attempt} failed: {e}. Retrying in {delay} seconds...')
-                time.sleep(delay)  # Wait before the next attempt
+def load_texture(texture_path):
+    """
+    Load a texture from the given file path.
+    """
+    try:
+        from PIL import Image
+        texture = Image.open(texture_path)
+        return texture
+    except Exception as e:
+        print(f'Error loading texture: {e}')
+        return None
+
+
+def check_collision(rect_a, rect_b):
+    """
+    Check if two rectangles collide.
+    """
+    return (rect_a['x'] < rect_b['x'] + rect_b['width'] and 
+            rect_a['x'] + rect_a['width'] > rect_b['x'] and 
+            rect_a['y'] < rect_b['y'] + rect_b['height'] and 
+            rect_a['y'] + rect_a['height'] > rect_b['y'])
+
+
+def interpolate(start, end, factor):
+    """
+    Interpolate between start and end values.
+    """
+    return start + (end - start) * factor
+
+
+if __name__ == '__main__':
+    # Example usage of the helper functions
+    fps = calculate_fps(0.0, 1.0, 60)
+    print(f'Calculated FPS: {fps}')
