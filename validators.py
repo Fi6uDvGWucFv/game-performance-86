@@ -1,33 +1,21 @@
-def validate_user_input(input_value):
-    """
-    Validates user input for the game.
-    
-    Args:
-        input_value (str): The user input to validate.
-    
-    Returns:
-        bool: True if valid, False otherwise.
-    """
-    if not isinstance(input_value, str):
-        return False
-    input_value = input_value.strip()
-    if not input_value:
-        return False
-    if len(input_value) > 20:
-        return False
+def validate_input(user_input):
+    if not isinstance(user_input, str):
+        raise ValueError('Input must be a string')
+    if not user_input:
+        raise ValueError('Input cannot be empty')
+    if len(user_input) > 100:
+        raise ValueError('Input exceeds maximum length of 100 characters')
     return True
 
-
-def main_game_loop():
-    game_running = True
-    while game_running:
-        user_input = input("Enter your command: ")
-        if validate_user_input(user_input):
-            # Process the valid command
-            print(f'Processing command: {user_input}')
-        else:
-            print("Invalid input, please try again.")
+def main_loop():
+    while True:
+        user_input = input('Enter command: ')
+        try:
+            validate_input(user_input)
+            process_command(user_input)
+        except ValueError as e:
+            print(f'Invalid input: {e}')
 
 
-if __name__ == '__main__':
-    main_game_loop()
+def process_command(command):
+    print(f'Processing command: {command}')  # Placeholder for actual command processing logic
