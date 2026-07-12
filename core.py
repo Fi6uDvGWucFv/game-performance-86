@@ -1,32 +1,27 @@
-import random
-from typing import List, Tuple, Optional
+import time
+import requests
 
-class Game:
-    def __init__(self, name: str, max_players: int) -> None:
-        self.name = name
-        self.max_players = max_players
-        self.players: List[str] = []
+class NetworkError(Exception):
+    pass
 
-    def add_player(self, player: str) -> Optional[str]:
-        if len(self.players) < self.max_players:
-            self.players.append(player)
-            return f'Player {player} added.'
-        return 'Cannot add player; max players reached.'
 
-    def start_game(self) -> str:
-        if len(self.players) == 0:
-            return 'No players to start the game.'
-        return f'Game {self.name} started with players: {self.players}'
+def retry_network_operation(url, retries=3, backoff_factor=1):
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            return response.json()  # Return the JSON response if successful
+        except (requests.ConnectionError, requests.HTTPError) as e:
+            if attempt < retries - 1:
+                wait_time = backoff_factor * (2 ** attempt)  # Exponential backoff
+                time.sleep(wait_time)  # Wait before the next attempt
+                continue  # Retry the operation
+            raise NetworkError(f"Unable to fetch data after {retries} attempts: {e}")
 
-    def get_winner(self) -> str:
-        if len(self.players) == 0:
-            return 'No players to determine a winner.'
-        winner = random.choice(self.players)
-        return f'The winner is {winner}!'
-
+# Example usage
 if __name__ == '__main__':
-    game = Game('Adventure Quest', 4)
-    print(game.add_player('Alice'))
-    print(game.add_player('Bob'))
-    print(game.start_game())
-    print(game.get_winner())
+    try:
+        data = retry_network_operation('https://api.example.com/data')
+        print(data)
+    except NetworkError as err:
+        print(err)
