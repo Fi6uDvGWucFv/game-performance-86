@@ -1,28 +1,34 @@
-from typing import Final
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
+FPS = 60
+PLAYER_SPEED = 5
+ENEMY_SPEED = 3
+BULLET_SPEED = 10
+GRAVITY = 9.81
+MAX_HEALTH = 100
 
-# Game constants to be used throughout the application
+COLORS = {
+    'BLACK': (0, 0, 0),
+    'WHITE': (255, 255, 255),
+    'RED': (255, 0, 0),
+    'GREEN': (0, 255, 0),
+    'BLUE': (0, 0, 255)
+}
 
-# Screen resolution constants
-SCREEN_WIDTH: Final[int] = 1920
-SCREEN_HEIGHT: Final[int] = 1080
+SOUNDS = {
+    'JUMP': 'sounds/jump.wav',
+    'SHOOT': 'sounds/shoot.wav',
+    'EXPLOSION': 'sounds/explosion.wav'
+}
 
-# Frame rate constant
-FPS: Final[int] = 60
+LEVELS = [
+    'level1.json',
+    'level2.json',
+    'level3.json'
+]
 
-# Color constants using RGB values
-BLACK: Final[tuple[int, int, int]] = (0, 0, 0)
-WHITE: Final[tuple[int, int, int]] = (255, 255, 255)
-RED: Final[tuple[int, int, int]] = (255, 0, 0)
-GREEN: Final[tuple[int, int, int]] = (0, 255, 0)
-BLUE: Final[tuple[int, int, int]] = (0, 0, 255)
-
-# Game state constants
-START_MENU: Final[str] = 'start_menu'
-PLAYING: Final[str] = 'playing'
-PAUSED: Final[str] = 'paused'
-GAME_OVER: Final[str] = 'game_over'
-
-# Other constants
-MAX_PLAYERS: Final[int] = 4
-MIN_PLAYERS: Final[int] = 1
-
+ITEMS = {
+    'HEALTH_PACK': 'health_pack',
+    'AMMO_BOX': 'ammo_box',
+    'SPEED_BOOST': 'speed_boost'
+}
