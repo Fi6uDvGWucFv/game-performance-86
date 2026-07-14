@@ -1,24 +1,58 @@
-import time
+import json
+from typing import Any, Dict, List
 
-def time_execution(func):
-    """Decorator to time the execution of a function."""
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        print(f"Execution time of {func.__name__}: {end_time - start_time} seconds")
-        return result
-    return wrapper
 
-@time_execution
-def optimize_performance(data):
-    """Optimizes game performance by filtering unnecessary data."""
-    filtered_data = [d for d in data if d.is_valid()]
-    return filtered_data
+def load_game_data(file_path: str) -> Dict[str, Any]:
+    """
+    Loads game data from a JSON file.
+    
+    Args:
+        file_path (str): The path to the JSON file containing game data.
+    
+    Returns:
+        dict: A dictionary containing the loaded game data.
+    """
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
-@time_execution
-def calculate_frame_rate(frames, time_elapsed):
-    """Calculates the frame rate based on frames rendered and time elapsed."""
-    if time_elapsed > 0:
-        return frames / time_elapsed
-    return 0
+
+def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
+    """
+    Saves game data to a JSON file.
+    
+    Args:
+        file_path (str): The path to the JSON file.
+        data (dict): The game data to save.
+    """
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def filter_high_scores(scores: List[Dict[str, Any]], threshold: int) -> List[Dict[str, Any]]:
+    """
+    Filters high scores above a certain threshold.
+    
+    Args:
+        scores (list): A list of score dictionaries.
+        threshold (int): The score threshold to filter.
+    
+    Returns:
+        list: A list of scores that exceed the threshold.
+    """
+    return [score for score in scores if score['score'] > threshold]
+
+
+def calculate_average_score(scores: List[Dict[str, Any]]) -> float:
+    """
+    Calculates the average score from a list of score dictionaries.
+    
+    Args:
+        scores (list): A list of score dictionaries.
+    
+    Returns:
+        float: The average score.
+    """
+    if not scores:
+        return 0.0
+    total = sum(score['score'] for score in scores)
+    return total / len(scores)
