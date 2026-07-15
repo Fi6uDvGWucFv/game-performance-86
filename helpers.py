@@ -1,49 +1,35 @@
-from typing import List, Dict
+import random
+import numpy as np
 
-
-def calculate_frame_rate(frames: int, time_seconds: float) -> float:
+def calculate_average(scores):
     """
-    Calculate the frame rate based on the number of frames and the elapsed time.
-
-    Args:
-        frames (int): The number of frames rendered.
-        time_seconds (float): The time in seconds over which the frames were rendered.
-
-    Returns:
-        float: The calculated frame rate.
+    Calculate the average score from a list of scores.
     """
-    if time_seconds <= 0:
-        raise ValueError('Time must be greater than zero.')
-    return frames / time_seconds
+    if not scores:
+        return 0.0
+    return sum(scores) / len(scores)
 
 
-def average_fps(fps_values: List[float]) -> float:
+def generate_random_id(length=8):
     """
-    Calculate the average frames per second (FPS).
+    Generate a random alphanumeric string as an ID.
+    """  
+    characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    return ''.join(random.choice(characters) for _ in range(length))
 
-    Args:
-        fps_values (List[float]): A list of FPS values.
 
-    Returns:
-        float: The average FPS.
+def normalize_vector(vector):
     """
-    if not fps_values:
-        raise ValueError('FPS values list cannot be empty.')
-    return sum(fps_values) / len(fps_values)
+    Normalize a numerical vector to unit length.
+    """ 
+    norm = np.linalg.norm(vector)
+    if norm == 0:
+        return vector
+    return vector / norm
 
 
-def prepare_game_stats(frames: int, elapsed_time: float, fps_values: List[float]) -> Dict[str, float]:
+def clamp(value, min_value, max_value):
     """
-    Prepare a summary of game statistics including frame rate and average FPS.
-
-    Args:
-        frames (int): The number of frames rendered.
-        elapsed_time (float): Elapsed time in seconds.
-        fps_values (List[float]): A list of FPS values.
-
-    Returns:
-        Dict[str, float]: A dictionary containing 'frame_rate' and 'average_fps'.
-    """
-    frame_rate = calculate_frame_rate(frames, elapsed_time)
-    average_fps_value = average_fps(fps_values)
-    return {'frame_rate': frame_rate, 'average_fps': average_fps_value}
+    Clamp a value between min_value and max_value.
+    """  
+    return max(min(value, max_value), min_value)
