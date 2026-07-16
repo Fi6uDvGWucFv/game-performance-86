@@ -1,35 +1,59 @@
-import random
-import numpy as np
-
-def calculate_average(scores):
+def calculate_fps(frames, elapsed_time):
     """
-    Calculate the average score from a list of scores.
+    Calculate Frames Per Second (FPS).
+    
+    Args:
+        frames (int): Number of frames rendered.
+        elapsed_time (float): Elapsed time in seconds.
+    
+    Returns:
+        float: Calculated FPS.
     """
-    if not scores:
+    if elapsed_time <= 0:
         return 0.0
-    return sum(scores) / len(scores)
-
-
-def generate_random_id(length=8):
-    """
-    Generate a random alphanumeric string as an ID.
-    """  
-    characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    return ''.join(random.choice(characters) for _ in range(length))
+    return frames / elapsed_time
 
 
 def normalize_vector(vector):
     """
-    Normalize a numerical vector to unit length.
-    """ 
-    norm = np.linalg.norm(vector)
-    if norm == 0:
-        return vector
-    return vector / norm
-
-
-def clamp(value, min_value, max_value):
+    Normalize a 3D vector.
+    
+    Args:
+        vector (tuple): A tuple (x, y, z).
+    
+    Returns:
+        tuple: Normalized vector.
     """
-    Clamp a value between min_value and max_value.
-    """  
-    return max(min(value, max_value), min_value)
+    import math
+    length = math.sqrt(sum(v ** 2 for v in vector))
+    if length == 0:
+        return (0.0, 0.0, 0.0)
+    return tuple(v / length for v in vector)
+
+
+def load_json_file(filepath):
+    """
+    Load a JSON file and return its content.
+    
+    Args:
+        filepath (str): Path to the JSON file.
+    
+    Returns:
+        dict: Content of the JSON file.
+    """
+    import json
+    with open(filepath, 'r') as file:
+        return json.load(file)
+
+
+def save_json_file(filepath, data):
+    """
+    Save data to a JSON file.
+    
+    Args:
+        filepath (str): Path to save the JSON file.
+        data (dict): Data to save.
+    """
+    import json
+    with open(filepath, 'w') as file:
+        json.dump(data, file, indent=4)
