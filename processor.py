@@ -1,28 +1,38 @@
-import time
+import json
 
-class GameProcessor:
-    def __init__(self, game_id):
-        self.game_id = game_id
-        self.start_time = None
-        self.end_time = None
+class GameDataProcessor:
+    def __init__(self, data):
+        self.data = data
 
-    def start_processing(self):
-        self.start_time = time.time()
-        print(f"Processing started for game {self.game_id}")
+    def validate_data(self):
+        if not isinstance(self.data, dict):
+            raise ValueError('Data must be a dictionary')
+        if 'scores' not in self.data:
+            raise KeyError('Missing key: scores')
+        if not isinstance(self.data['scores'], list):
+            raise ValueError('Scores must be a list')
 
-    def end_processing(self):
-        self.end_time = time.time()
-        duration = self.end_time - self.start_time
-        print(f"Processing ended for game {self.game_id} in {duration:.2f} seconds")
-        return duration
+    def calculate_average_score(self):
+        self.validate_data()  
+        try:
+            total = sum(self.data['scores'])
+            count = len(self.data['scores'])
+            average = total / count
+            return average
+        except ZeroDivisionError:
+            return 'No scores to average'
+        except TypeError:
+            return 'Scores must be numbers'
 
-    def reset(self):
-        self.start_time = None
-        self.end_time = None
-        print(f"Processor for game {self.game_id} has been reset")
+    def to_json(self):
+        try:
+            return json.dumps(self.data)
+        except (TypeError, OverflowError) as e:
+            return f'Error converting to JSON: {str(e)}'
 
+# Example usage
 if __name__ == '__main__':
-    processor = GameProcessor(86)
-    processor.start_processing()
-    time.sleep(2)  # Simulate game processing time
-    processor.end_processing()
+    game_data = {'scores': [100, 200, 300]}
+    processor = GameDataProcessor(game_data)
+    print(processor.calculate_average_score())  # Should print the average score
+    print(processor.to_json())  # Should print JSON representation of the data
