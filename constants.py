@@ -1,34 +1,31 @@
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-FPS = 60
-PLAYER_SPEED = 5
-ENEMY_SPEED = 3
-BULLET_SPEED = 10
-GRAVITY = 9.81
-MAX_HEALTH = 100
+from enum import Enum
 
-COLORS = {
-    'BLACK': (0, 0, 0),
-    'WHITE': (255, 255, 255),
-    'RED': (255, 0, 0),
-    'GREEN': (0, 255, 0),
-    'BLUE': (0, 0, 255)
-}
+class GameLevels(Enum):
+    EASY = 'easy'
+    MEDIUM = 'medium'
+    HARD = 'hard'
 
-SOUNDS = {
-    'JUMP': 'sounds/jump.wav',
-    'SHOOT': 'sounds/shoot.wav',
-    'EXPLOSION': 'sounds/explosion.wav'
-}
+class PlayerStats:
+    MAX_HEALTH: int = 100
+    MAX_LEVEL: int = 50
+    BASE_DAMAGE: float = 10.0
 
-LEVELS = [
-    'level1.json',
-    'level2.json',
-    'level3.json'
-]
+    def __init__(self, health: int = MAX_HEALTH, level: int = 1) -> None:
+        self.health: int = health
+        self.level: int = level
 
-ITEMS = {
-    'HEALTH_PACK': 'health_pack',
-    'AMMO_BOX': 'ammo_box',
-    'SPEED_BOOST': 'speed_boost'
-}
+    def is_alive(self) -> bool:
+        """Check if the player is alive."""
+        return self.health > 0
+
+    def take_damage(self, amount: float) -> None:
+        """Apply damage to the player."""
+        if amount < 0:
+            raise ValueError('Damage amount must be non-negative')
+        self.health = max(self.health - amount, 0)
+
+    def level_up(self) -> None:
+        """Increase player level by 1 if below the max level."""
+        if self.level < PlayerStats.MAX_LEVEL:
+            self.level += 1
+
