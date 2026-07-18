@@ -1,56 +1,47 @@
-import logging
-from typing import Any, Dict
+from typing import List, Dict, Any
 
-logger = logging.getLogger(__name__)
-
-
-def handle_event(event: Dict[str, Any]) -> None:
+class GameHandler:
     """
-    Processes a gaming event and logs the results.
-
-    Args:
-        event (Dict[str, Any]): A dictionary representing the event details.
-
-    Returns:
-        None
+    A class to handle game-related operations.
     """
-    if 'type' not in event:
-        logger.error('Event type is missing')
-        return
-    
-    logger.info(f'Handling event of type: {event['type']}')
-    # Implement further event handling logic here
-    
 
-def validate_event(event: Dict[str, Any]) -> bool:
-    """
-    Validates the structure of the gaming event.
+    def __init__(self, game_name: str, high_score: int = 0) -> None:
+        """
+        Initializes the GameHandler with a game name and high score.
+        """
+        self.game_name: str = game_name
+        self.high_score: int = high_score
 
-    Args:
-        event (Dict[str, Any]): The event to validate.
-
-    Returns:
-        bool: True if valid, False otherwise.
-    """
-    required_keys = ['type', 'data']
-    is_valid = all(key in event for key in required_keys)
-    if not is_valid:
-        logger.warning('Invalid event structure')
-    return is_valid
-
-
-def process_events(events: List[Dict[str, Any]]) -> None:
-    """
-    Processes a list of gaming events.
-
-    Args:
-        events (List[Dict[str, Any]]): The list of events to process.
-
-    Returns:
-        None
-    """
-    for event in events:
-        if validate_event(event):
-            handle_event(event)
+    def update_high_score(self, new_score: int) -> None:
+        """
+        Updates the high score if the new score is higher.
+        """
+        if new_score > self.high_score:
+            print(f"Updating high score from {self.high_score} to {new_score}")
+            self.high_score = new_score
         else:
-            logger.error('Event failed validation')
+            print(f"New score {new_score} does not exceed high score {self.high_score}")
+
+    def get_game_info(self) -> Dict[str, Any]:
+        """
+        Returns a dictionary with game information.
+        """
+        return {
+            'game_name': self.game_name,
+            'high_score': self.high_score
+        }
+
+    def display_high_score(self) -> None:
+        """
+        Displays the current high score.
+        """
+        print(f"Current high score for {self.game_name}: {self.high_score}")
+
+if __name__ == '__main__':
+    game = GameHandler('Space Invaders')
+    game.update_high_score(100)
+    game.display_high_score()
+    game.update_high_score(80)
+    game.display_high_score()
+    info = game.get_game_info()
+    print(info)
