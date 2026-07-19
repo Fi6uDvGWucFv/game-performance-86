@@ -1,58 +1,46 @@
 import json
-from typing import Any, Dict, List
+from typing import List, Dict
 
 
-def load_game_data(file_path: str) -> Dict[str, Any]:
+def load_game_data(file_path: str) -> List[Dict]:
     """
-    Loads game data from a JSON file.
+    Load game data from a JSON file.
     
-    Args:
-        file_path (str): The path to the JSON file containing game data.
-    
-    Returns:
-        dict: A dictionary containing the loaded game data.
+    :param file_path: Path to the JSON file containing game data.
+    :return: List of game data dictionaries.
     """
     with open(file_path, 'r') as file:
         return json.load(file)
 
 
-def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
+def save_game_data(file_path: str, data: List[Dict]) -> None:
     """
-    Saves game data to a JSON file.
+    Save game data to a JSON file.
     
-    Args:
-        file_path (str): The path to the JSON file.
-        data (dict): The game data to save.
+    :param file_path: Path to the JSON file to save data.
+    :param data: List of game data dictionaries to save.
     """
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
 
-def filter_high_scores(scores: List[Dict[str, Any]], threshold: int) -> List[Dict[str, Any]]:
+def filter_high_scores(data: List[Dict], min_score: int) -> List[Dict]:
     """
-    Filters high scores above a certain threshold.
+    Filter game data for high scores.
     
-    Args:
-        scores (list): A list of score dictionaries.
-        threshold (int): The score threshold to filter.
-    
-    Returns:
-        list: A list of scores that exceed the threshold.
+    :param data: List of game data dictionaries.
+    :param min_score: Minimum score threshold for filtering.
+    :return: Filtered list of dictionaries with high scores.
     """
-    return [score for score in scores if score['score'] > threshold]
+    return [entry for entry in data if entry.get('score', 0) >= min_score]
 
 
-def calculate_average_score(scores: List[Dict[str, Any]]) -> float:
+def get_average_score(data: List[Dict]) -> float:
     """
-    Calculates the average score from a list of score dictionaries.
+    Calculate average score from game data.
     
-    Args:
-        scores (list): A list of score dictionaries.
-    
-    Returns:
-        float: The average score.
+    :param data: List of game data dictionaries.
+    :return: Average score as a float.
     """
-    if not scores:
-        return 0.0
-    total = sum(score['score'] for score in scores)
-    return total / len(scores)
+    total_score = sum(entry.get('score', 0) for entry in data)
+    return total_score / len(data) if data else 0.0
