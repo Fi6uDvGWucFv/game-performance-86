@@ -1,46 +1,45 @@
 import json
-from typing import List, Dict
 
 
-def load_game_data(file_path: str) -> List[Dict]:
+def load_game_data(file_path):
     """
     Load game data from a JSON file.
     
-    :param file_path: Path to the JSON file containing game data.
-    :return: List of game data dictionaries.
+    :param file_path: str - Path to the JSON file containing game data.
+    :return: dict - Parsed JSON data as a dictionary.
     """
-    with open(file_path, 'r') as file:
-        return json.load(file)
+    try:
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        raise Exception(f'File not found: {file_path}')
+    except json.JSONDecodeError:
+        raise Exception('Error decoding JSON from the file.')
 
 
-def save_game_data(file_path: str, data: List[Dict]) -> None:
+def save_game_data(file_path, data):
     """
     Save game data to a JSON file.
     
-    :param file_path: Path to the JSON file to save data.
-    :param data: List of game data dictionaries to save.
+    :param file_path: str - Path to the JSON file to save data.
+    :param data: dict - Data to save as JSON.
     """
-    with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)
+    try:
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+    except IOError:
+        raise Exception(f'Error writing to file: {file_path}')
 
 
-def filter_high_scores(data: List[Dict], min_score: int) -> List[Dict]:
+def update_game_score(game_data, player_id, new_score):
     """
-    Filter game data for high scores.
+    Update the score for a player in game data.
     
-    :param data: List of game data dictionaries.
-    :param min_score: Minimum score threshold for filtering.
-    :return: Filtered list of dictionaries with high scores.
+    :param game_data: dict - Current game data.
+    :param player_id: str - Player identification string.
+    :param new_score: int - New score to be set.
     """
-    return [entry for entry in data if entry.get('score', 0) >= min_score]
-
-
-def get_average_score(data: List[Dict]) -> float:
-    """
-    Calculate average score from game data.
-    
-    :param data: List of game data dictionaries.
-    :return: Average score as a float.
-    """
-    total_score = sum(entry.get('score', 0) for entry in data)
-    return total_score / len(data) if data else 0.0
+    if player_id in game_data:
+        game_data[player_id]['score'] = new_score
+    else:
+        raise Exception(f'Player ID not found: {player_id}')
