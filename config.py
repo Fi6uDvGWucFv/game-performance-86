@@ -1,29 +1,27 @@
 import json
 import os
 
-class ConfigLoader:
-    def __init__(self, default_config_path, user_config_path):
-        self.default_config = self.load_config(default_config_path)
-        self.user_config = self.load_config(user_config_path) or {}
-        self.final_config = self.merge_configs(self.default_config, self.user_config)
+def load_config(file_path='config.json', defaults=None):
+    # Load configuration from JSON file, using defaults if file is not found
+    if defaults is None:
+        defaults = {}
+    
+    if not os.path.exists(file_path):
+        return defaults
+    
+    with open(file_path, 'r') as config_file:
+        try:
+            config = json.load(config_file)
+        except json.JSONDecodeError:
+            print('Error decoding JSON; using defaults.')
+            return defaults
+    
+    # Update defaults with loaded config
+    updated_config = {**defaults, **config}
+    return updated_config
 
-    def load_config(self, path):
-        """Loads JSON configuration from a file."""
-        if not os.path.isfile(path):
-            return None
-        with open(path, 'r') as file:
-            return json.load(file)
-
-    def merge_configs(self, default, user):
-        """Merges user configuration over default."""
-        merged = default.copy()  # Start with default config
-        merged.update(user)      # Override with user config
-        return merged
-
-    def get(self, key, fallback=None):
-        """Get a configuration value or fallback if not present."""
-        return self.final_config.get(key, fallback)
-
-# Usage:
-# loader = ConfigLoader('default_config.json', 'user_config.json')
-# value = loader.get('some_key', 'default_value')
+# Example usage
+if __name__ == '__main__':
+    default_config = {'volume': 100, 'resolution': '1920x1080'}
+    config = load_config('settings.json', default_config)
+    print(config)
