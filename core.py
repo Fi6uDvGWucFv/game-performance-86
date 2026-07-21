@@ -1,39 +1,38 @@
-import json
-from typing import Any, Dict, List
+import time
+import random
 
-class GameDataHandler:
-    def __init__(self, file_path: str):
-        self.file_path = file_path
+class Game:
+    def __init__(self, name):
+        self.name = name
+        self.entities = []
 
-    def load_data(self) -> List[Dict[str, Any]]:
-        """Load game data from a JSON file."""
-        try:
-            with open(self.file_path, 'r') as file:
-                data = json.load(file)
-                return data
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading data: {e}")
-            return []
+    def add_entity(self, entity):
+        self.entities.append(entity)
 
-    def save_data(self, data: List[Dict[str, Any]]) -> None:
-        """Save game data to a JSON file."""
-        try:
-            with open(self.file_path, 'w') as file:
-                json.dump(data, file, indent=4)
-        except IOError as e:
-            print(f"Error saving data: {e}")
+    def update(self):
+        start_time = time.perf_counter()
+        for entity in self.entities:
+            entity.update()
+        end_time = time.perf_counter()
+        self.optimize_performance(end_time - start_time)
 
-    def update_data(self, updated_data: List[Dict[str, Any]]) -> None:
-        """Update game data by merging new data."""
-        current_data = self.load_data()
-        current_data.extend(updated_data)
-        self.save_data(current_data)
+    def optimize_performance(self, duration):
+        if duration > 0.016:  # Roughly 60 FPS
+            print(f'Performance optimization needed. Frame duration: {duration:.3f}s')
+            self.entities = self.entities[:100]  # Keep only the first 100 entities
 
-    def clear_data(self) -> None:
-        """Clear all game data from the JSON file."""
-        self.save_data([])
+class Entity:
+    def __init__(self, id):
+        self.id = id
+        self.position = (random.randint(0, 100), random.randint(0, 100))
 
-# Example usage:
-# handler = GameDataHandler('game_data.json')
-# handler.save_data([{'level': 1, 'score': 100}])
-# print(handler.load_data())
+    def update(self):
+        self.position = (self.position[0] + 1, self.position[1] + 1)  # Move entity
+
+# Example usage
+if __name__ == '__main__':
+    game = Game('Sample Game')
+    for i in range(150):  # Adding more entities than needed
+        game.add_entity(Entity(i))
+    while True:
+        game.update()
