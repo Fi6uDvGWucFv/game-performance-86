@@ -1,38 +1,33 @@
-import json
+import numpy as np
+import pandas as pd
 
 class GameDataProcessor:
     def __init__(self, data):
         self.data = data
 
-    def validate_data(self):
-        if not isinstance(self.data, dict):
-            raise ValueError('Data must be a dictionary')
-        if 'scores' not in self.data:
-            raise KeyError('Missing key: scores')
-        if not isinstance(self.data['scores'], list):
-            raise ValueError('Scores must be a list')
+    def clean_data(self):
+        self.data.dropna(inplace=True)  # Remove missing values
+        self.data = self.data[self.data['score'] >= 0]  # Filter out negative scores
 
-    def calculate_average_score(self):
-        self.validate_data()  
-        try:
-            total = sum(self.data['scores'])
-            count = len(self.data['scores'])
-            average = total / count
-            return average
-        except ZeroDivisionError:
-            return 'No scores to average'
-        except TypeError:
-            return 'Scores must be numbers'
+    def normalize_scores(self):
+        score_max = self.data['score'].max()
+        score_min = self.data['score'].min()
+        self.data['normalized_score'] = (self.data['score'] - score_min) / (score_max - score_min)  # Normalize scores to [0, 1]
 
-    def to_json(self):
-        try:
-            return json.dumps(self.data)
-        except (TypeError, OverflowError) as e:
-            return f'Error converting to JSON: {str(e)}'
+    def process(self):
+        self.clean_data()  # Clean the input data
+        self.normalize_scores()  # Normalize scores
 
-# Example usage
+    def get_processed_data(self):
+        return self.data
+
+
+# Example usage:
 if __name__ == '__main__':
-    game_data = {'scores': [100, 200, 300]}
-    processor = GameDataProcessor(game_data)
-    print(processor.calculate_average_score())  # Should print the average score
-    print(processor.to_json())  # Should print JSON representation of the data
+    sample_data = pd.DataFrame({
+        'player': ['Alice', 'Bob', 'Charlie', 'David'],
+        'score': [100, np.nan, -50, 75]
+    })
+    processor = GameDataProcessor(sample_data)
+    processor.process()
+    print(processor.get_processed_data())
