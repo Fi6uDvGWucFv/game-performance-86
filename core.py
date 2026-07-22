@@ -1,38 +1,32 @@
 import time
-import random
 
 class Game:
-    def __init__(self, name):
+    def __init__(self, name, fps_limit=60):
         self.name = name
-        self.entities = []
+        self.fps_limit = fps_limit
+        self.last_frame_time = time.time()
+        self.delta_time = 0
 
-    def add_entity(self, entity):
-        self.entities.append(entity)
+    def start(self):
+        print(f'Starting game: {self.name}')
+        self.main_loop()
 
-    def update(self):
-        start_time = time.perf_counter()
-        for entity in self.entities:
-            entity.update()
-        end_time = time.perf_counter()
-        self.optimize_performance(end_time - start_time)
-
-    def optimize_performance(self, duration):
-        if duration > 0.016:  # Roughly 60 FPS
-            print(f'Performance optimization needed. Frame duration: {duration:.3f}s')
-            self.entities = self.entities[:100]  # Keep only the first 100 entities
-
-class Entity:
-    def __init__(self, id):
-        self.id = id
-        self.position = (random.randint(0, 100), random.randint(0, 100))
+    def main_loop(self):
+        while True:
+            self.update()
+            self.render()
+            self.sleep()
 
     def update(self):
-        self.position = (self.position[0] + 1, self.position[1] + 1)  # Move entity
+        print('Updating game state...')
 
-# Example usage
-if __name__ == '__main__':
-    game = Game('Sample Game')
-    for i in range(150):  # Adding more entities than needed
-        game.add_entity(Entity(i))
-    while True:
-        game.update()
+    def render(self):
+        print('Rendering frame...')
+
+    def sleep(self):
+        current_time = time.time()
+        self.delta_time = current_time - self.last_frame_time
+        frame_time = 1.0 / self.fps_limit
+        if self.delta_time < frame_time:
+            time.sleep(frame_time - self.delta_time)
+        self.last_frame_time = time.time()
