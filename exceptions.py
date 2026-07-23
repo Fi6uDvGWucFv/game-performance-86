@@ -1,22 +1,32 @@
 class GameError(Exception):
     """Base class for game-related exceptions."""
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
-        self.message = message
+    pass
 
-class InvalidInputError(GameError):
-    """Exception raised for invalid player input."""
-    def __init__(self, message: str = 'Invalid input provided.') -> None:
-        super().__init__(message)
+class InvalidMoveError(GameError):
+    """Exception raised for invalid moves."""
+    def __init__(self, move):
+        self.move = move
+        super().__init__(f'Invalid move: {self.move}')
 
-class GameNotFoundError(GameError):
-    """Exception raised when the game is not found."""
-    def __init__(self, game_name: str) -> None:
-        message = f'Game not found: {game_name}'
-        super().__init__(message)
+class ResourceNotFoundError(GameError):
+    """Exception raised when a resource is not found."""
+    def __init__(self, resource_name):
+        self.resource_name = resource_name
+        super().__init__(f'Resource not found: {self.resource_name}')
 
-class PlayerNotFoundError(GameError):
-    """Exception raised when a player is not found."""
-    def __init__(self, player_id: str) -> None:
-        message = f'Player not found with ID: {player_id}'
-        super().__init__(message)
+class InsufficientResourcesError(GameError):
+    """Exception raised for insufficient resources."""
+    def __init__(self, required, available):
+        self.required = required
+        self.available = available
+        super().__init__(f'Insufficient resources: required {self.required}, available {self.available}')
+
+# Example usage in a game function:
+
+def make_move(move, resources):
+    allowed_moves = ['up', 'down', 'left', 'right']
+    if move not in allowed_moves:
+        raise InvalidMoveError(move)
+    if resources < 1:
+        raise InsufficientResourcesError(1, resources)
+    # Proceed with making the move
