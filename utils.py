@@ -1,45 +1,46 @@
-import json
+from typing import List, Dict
 
 
-def load_game_data(file_path):
+def calculate_average(scores: List[int]) -> float:
     """
-    Load game data from a JSON file.
-    
-    :param file_path: str - Path to the JSON file containing game data.
-    :return: dict - Parsed JSON data as a dictionary.
+    Calculate the average of a list of scores.
+
+    Parameters:
+    scores (List[int]): A list of integer scores.
+
+    Returns:
+    float: The average score.
     """
-    try:
-        with open(file_path, 'r') as file:
-            return json.load(file)
-    except FileNotFoundError:
-        raise Exception(f'File not found: {file_path}')
-    except json.JSONDecodeError:
-        raise Exception('Error decoding JSON from the file.')
+    if not scores:
+        return 0.0
+    return sum(scores) / len(scores)
 
 
-def save_game_data(file_path, data):
+def find_top_scorers(scores: Dict[str, int], threshold: int) -> List[str]:
     """
-    Save game data to a JSON file.
-    
-    :param file_path: str - Path to the JSON file to save data.
-    :param data: dict - Data to save as JSON.
+    Find players who scored above a certain threshold.
+
+    Parameters:
+    scores (Dict[str, int]): A dictionary mapping player names to their scores.
+    threshold (int): The score threshold to filter players.
+
+    Returns:
+    List[str]: A list of player names who scored above the threshold.
     """
-    try:
-        with open(file_path, 'w') as file:
-            json.dump(data, file, indent=4)
-    except IOError:
-        raise Exception(f'Error writing to file: {file_path}')
+    return [player for player, score in scores.items() if score > threshold]
 
 
-def update_game_score(game_data, player_id, new_score):
+def format_scoreboard(scores: Dict[str, int]) -> str:
     """
-    Update the score for a player in game data.
-    
-    :param game_data: dict - Current game data.
-    :param player_id: str - Player identification string.
-    :param new_score: int - New score to be set.
+    Format the scoreboard as a string.
+
+    Parameters:
+    scores (Dict[str, int]): A dictionary mapping player names to their scores.
+
+    Returns:
+    str: A formatted string of the scoreboard.
     """
-    if player_id in game_data:
-        game_data[player_id]['score'] = new_score
-    else:
-        raise Exception(f'Player ID not found: {player_id}')
+    formatted = 'Scoreboard:\n'
+    for player, score in scores.items():
+        formatted += f'{player}: {score}\n'
+    return formatted.strip()
