@@ -1,10 +1,6 @@
-MAX_FPS = 60
+FPS_TARGET = 60
 
-# Game screen dimensions
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-
-# Colors in RGB format
+# Color constants
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -17,18 +13,17 @@ GAME_PAUSED = 'paused'
 GAME_OVER = 'game_over'
 
 # Physics constants
-GRAVITY = 9.81
-JUMP_VELOCITY = 10
+GRAVITY = 9.81  # Acceleration due to gravity in m/s^2
+FPS_TO_MS = 1000 / FPS_TARGET  # Convert frames per second to milliseconds
 
-# Player settings
+# Screen dimensions
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+# Player constants
 PLAYER_SPEED = 5
-PLAYER_HEALTH = 100
+PLAYER_JUMP_HEIGHT = 15
 
-# Asset paths
-def get_asset_path(asset_name):
-    import os
-    return os.path.join('assets', asset_name)
-
-# Example asset paths
-PLAYER_SPRITE = get_asset_path('player_sprite.png')
-ENEMY_SPRITE = get_asset_path('enemy_sprite.png')
+# Level constants
+LEVEL_COUNT = 5
+LEVEL_DIFFICULTY = {'easy': 1, 'medium': 2, 'hard': 3}
