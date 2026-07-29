@@ -1,32 +1,32 @@
 import logging
-from logging.handlers import RotatingFileHandler
 
-# Logger setup function
+class GameLogger:
+    def __init__(self, name='GameLogger'):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.DEBUG)
+        self._setup_handler()
 
-def setup_logger(log_file='game.log', max_size=5*1024*1024, backup_count=3):
-    """Set up a logger with rotation."""
-    # Create a custom logger
-    logger = logging.getLogger('game_logger')
-    logger.setLevel(logging.DEBUG)
+    def _setup_handler(self):
+        handler = logging.FileHandler('game_performance.log')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
-    # Create a handler that writes log entries to a file,
-    # rotating the log when it reaches a certain size
-    handler = RotatingFileHandler(log_file, maxBytes=max_size, backupCount=backup_count)
-    handler.setLevel(logging.DEBUG)
+    def log_info(self, message):
+        self.logger.info(message)
 
-    # Create a formatter and set it for the handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
+    def log_warning(self, message):
+        self.logger.warning(message)
 
-    # Add the handler to the logger
-    logger.addHandler(handler)
-    return logger
+    def log_error(self, message):
+        self.logger.error(message)
 
-# Example usage
+    def log_critical(self, message):
+        self.logger.critical(message)
+
 if __name__ == '__main__':
-    logger = setup_logger()
-    logger.debug('This is a debug message')
-    logger.info('This is an info message')
-    logger.warning('This is a warning message')
-    logger.error('This is an error message')
-    logger.critical('This is a critical message')
+    game_logger = GameLogger()
+    game_logger.log_info('Game started.')
+    game_logger.log_warning('Low memory warning.')
+    game_logger.log_error('Error loading level.')
+    game_logger.log_critical('Game crashed!')
