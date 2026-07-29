@@ -1,59 +1,33 @@
-def calculate_fps(frames, elapsed_time):
-    """
-    Calculate Frames Per Second (FPS).
-    
-    Args:
-        frames (int): Number of frames rendered.
-        elapsed_time (float): Elapsed time in seconds.
-    
-    Returns:
-        float: Calculated FPS.
-    """
-    if elapsed_time <= 0:
-        return 0.0
-    return frames / elapsed_time
+import json
+from typing import Any, Dict
 
 
-def normalize_vector(vector):
-    """
-    Normalize a 3D vector.
-    
-    Args:
-        vector (tuple): A tuple (x, y, z).
-    
-    Returns:
-        tuple: Normalized vector.
-    """
-    import math
-    length = math.sqrt(sum(v ** 2 for v in vector))
-    if length == 0:
-        return (0.0, 0.0, 0.0)
-    return tuple(v / length for v in vector)
+def load_game_data(file_path: str) -> Dict[str, Any]:
+    """Load game data from a JSON file."""
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+            return data
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Error: The file {file_path} is not a valid JSON.")
+        return {}
 
 
-def load_json_file(filepath):
-    """
-    Load a JSON file and return its content.
-    
-    Args:
-        filepath (str): Path to the JSON file.
-    
-    Returns:
-        dict: Content of the JSON file.
-    """
-    import json
-    with open(filepath, 'r') as file:
-        return json.load(file)
+def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
+    """Save game data to a JSON file."""
+    try:
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+    except IOError as e:
+        print(f"Error: An IOError occurred while writing to {file_path}: {e}")
 
 
-def save_json_file(filepath, data):
-    """
-    Save data to a JSON file.
-    
-    Args:
-        filepath (str): Path to save the JSON file.
-        data (dict): Data to save.
-    """
-    import json
-    with open(filepath, 'w') as file:
-        json.dump(data, file, indent=4)
+def update_game_data(file_path: str, new_data: Dict[str, Any]) -> None:
+    """Update specific fields in game data."""
+    current_data = load_game_data(file_path)
+    current_data.update(new_data)
+    save_game_data(file_path, current_data)
+
