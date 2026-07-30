@@ -1,32 +1,25 @@
 import logging
+import os
+from logging.handlers import RotatingFileHandler
 
-class GameLogger:
-    def __init__(self, name='GameLogger'):
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(logging.DEBUG)
-        self._setup_handler()
+def setup_logger(name, log_file, level=logging.INFO):
+    """Set up a logger with rotation for log files."""
+    # Create a directory for logs if it doesn't exist
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
 
-    def _setup_handler(self):
-        handler = logging.FileHandler('game_performance.log')
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+    # Create a rotating file handler
+    handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=2)  # 5 MB max size
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
 
-    def log_info(self, message):
-        self.logger.info(message)
+    # Get the specified logger and set level
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger
 
-    def log_warning(self, message):
-        self.logger.warning(message)
-
-    def log_error(self, message):
-        self.logger.error(message)
-
-    def log_critical(self, message):
-        self.logger.critical(message)
-
+# Example usage
 if __name__ == '__main__':
-    game_logger = GameLogger()
-    game_logger.log_info('Game started.')
-    game_logger.log_warning('Low memory warning.')
-    game_logger.log_error('Error loading level.')
-    game_logger.log_critical('Game crashed!')
+    logger = setup_logger('game_logger', 'logs/game.log')
+    logger.info('Logger is set up and ready to log.')
