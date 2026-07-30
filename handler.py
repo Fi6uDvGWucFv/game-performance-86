@@ -1,47 +1,36 @@
-from typing import List, Dict, Any
+import json
+import logging
 
-class GameHandler:
-    """
-    A class to handle game-related operations.
-    """
+# Set up logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    def __init__(self, game_name: str, high_score: int = 0) -> None:
-        """
-        Initializes the GameHandler with a game name and high score.
-        """
-        self.game_name: str = game_name
-        self.high_score: int = high_score
+class GameError(Exception):
+    pass
 
-    def update_high_score(self, new_score: int) -> None:
-        """
-        Updates the high score if the new score is higher.
-        """
-        if new_score > self.high_score:
-            print(f"Updating high score from {self.high_score} to {new_score}")
-            self.high_score = new_score
-        else:
-            print(f"New score {new_score} does not exceed high score {self.high_score}")
+class InputError(GameError):
+    pass
 
-    def get_game_info(self) -> Dict[str, Any]:
-        """
-        Returns a dictionary with game information.
-        """
-        return {
-            'game_name': self.game_name,
-            'high_score': self.high_score
-        }
+class NetworkError(GameError):
+    pass
 
-    def display_high_score(self) -> None:
-        """
-        Displays the current high score.
-        """
-        print(f"Current high score for {self.game_name}: {self.high_score}")
+def handle_game_action(action):
+    try:
+        logger.info(f'Handling action: {action}')
+        if action not in ['start', 'stop', 'pause']:
+            raise InputError(f'Invalid action: {action}')
+        perform_action(action)
+    except InputError as ie:
+        logger.error(f'Input Error: {ie}')
+        return json.dumps({'success': False, 'error': str(ie)})
+    except NetworkError as ne:
+        logger.error(f'Network Error: {ne}')
+        return json.dumps({'success': False, 'error': str(ne)})
+    except Exception as e:
+        logger.exception('An unexpected error occurred')
+        return json.dumps({'success': False, 'error': 'An unexpected error occurred'})
+    return json.dumps({'success': True})
 
-if __name__ == '__main__':
-    game = GameHandler('Space Invaders')
-    game.update_high_score(100)
-    game.display_high_score()
-    game.update_high_score(80)
-    game.display_high_score()
-    info = game.get_game_info()
-    print(info)
+def perform_action(action):
+    # Placeholder for action performance logic
+    pass
