@@ -1,34 +1,39 @@
-import json
-import os
+from typing import Dict
 
-class ConfigLoader:
-    def __init__(self, default_config_path='default_config.json', user_config_path='user_config.json'):
-        self.default_config_path = default_config_path
-        self.user_config_path = user_config_path
-        self.config = self.load_config()
+class GameConfig:
+    """
+    A class to hold game configuration settings.
+    """
+    def __init__(self, settings: Dict[str, str]) -> None:
+        """
+        Initialize the GameConfig with provided settings.
+        
+        :param settings: A dictionary containing game settings.
+        """
+        self.settings = settings
 
-    def load_config(self):
-        config = self.load_default_config()
-        user_config = self.load_user_config()
-        config.update(user_config)
-        return config
+    def get_setting(self, key: str) -> str:
+        """
+        Retrieve a specific setting by key.
+        
+        :param key: The key for the desired setting.
+        :return: The value of the setting.
+        """
+        return self.settings.get(key, 'Not found')
 
-    def load_default_config(self):
-        if not os.path.exists(self.default_config_path):
-            raise FileNotFoundError(f'Default config file not found: {self.default_config_path}')
-        with open(self.default_config_path, 'r') as f:
-            return json.load(f)
+    def set_setting(self, key: str, value: str) -> None:
+        """
+        Update a specific setting by key.
+        
+        :param key: The key for the setting to update.
+        :param value: The new value for the setting.
+        """
+        self.settings[key] = value
 
-    def load_user_config(self):
-        if not os.path.exists(self.user_config_path):
-            return {}
-        with open(self.user_config_path, 'r') as f:
-            return json.load(f)
-
-    def get(self, key, default=None):
-        return self.config.get(key, default)
-
-config_loader = ConfigLoader()  # Instantiate the config loader
-
-if __name__ == '__main__':
-    print(config_loader.config)  # Print final merged configuration
+    def all_settings(self) -> Dict[str, str]:
+        """
+        Return all settings as a dictionary.
+        
+        :return: A dictionary of all game settings.
+        """
+        return self.settings
