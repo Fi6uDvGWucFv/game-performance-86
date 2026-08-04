@@ -1,32 +1,41 @@
-import time
+from typing import List
 
 class Game:
-    def __init__(self, name, fps_limit=60):
+    def __init__(self, name: str, players: List[str]) -> None:
+        """Initializes a new game.
+
+        Args:
+            name (str): The name of the game.
+            players (List[str]): A list of player names.
+        """
         self.name = name
-        self.fps_limit = fps_limit
-        self.last_frame_time = time.time()
-        self.delta_time = 0
+        self.players = players
 
-    def start(self):
+    def start(self) -> None:
+        """Starts the game and announces the players."""
         print(f'Starting game: {self.name}')
-        self.main_loop()
+        print('Players in this game:')
+        for player in self.players:
+            print(f'- {player}')
 
-    def main_loop(self):
-        while True:
-            self.update()
-            self.render()
-            self.sleep()
+    def add_player(self, player: str) -> None:
+        """Adds a player to the game.
 
-    def update(self):
-        print('Updating game state...')
+        Args:
+            player (str): The name of the player to add.
+        """
+        self.players.append(player)
 
-    def render(self):
-        print('Rendering frame...')
+    def get_player_count(self) -> int:
+        """Returns the number of players in the game.
 
-    def sleep(self):
-        current_time = time.time()
-        self.delta_time = current_time - self.last_frame_time
-        frame_time = 1.0 / self.fps_limit
-        if self.delta_time < frame_time:
-            time.sleep(frame_time - self.delta_time)
-        self.last_frame_time = time.time()
+        Returns:
+            int: The current player count.
+        """
+        return len(self.players)
+
+if __name__ == '__main__':
+    game = Game('Battle Royale', ['Alice', 'Bob'])
+    game.start()
+    game.add_player('Charlie')
+    print(f'Total players: {game.get_player_count()}')
