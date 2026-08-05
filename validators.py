@@ -1,35 +1,40 @@
 import re
 
-# A collection of validation functions for the game
+# Validate player username requirements
 
-def is_valid_username(username):
-    """Check if the username is valid."
-    # Username must be alphanumeric and 3-15 characters long.
-    return bool(re.match('^[a-zA-Z0-9]{3,15}$', username))
+def is_valid_username(username: str) -> bool:
+    """Check if the username meets the criteria."""
+    if not (3 <= len(username) <= 20):
+        return False
+    if not re.match('^[a-zA-Z0-9_]+$', username):
+        return False
+    return True
 
+# Validate email format
 
-def is_valid_email(email):
-    """Check if the email format is valid."
-    # Basic regex for validating an email.
-    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(email_regex, email))
+def is_valid_email(email: str) -> bool:
+    """Check if the email has a valid format."""
+    pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    return re.match(pattern, email) is not None
 
+# Validate password strength
 
-def is_valid_score(score):
-    """Check if the score is a non-negative integer."
-    # Score must be a non-negative integer.
-    return isinstance(score, int) and score >= 0
+def is_strong_password(password: str) -> bool:
+    """Check if the password is strong enough."""
+    if len(password) < 8:
+        return False
+    if not re.search('[A-Z]', password):
+        return False
+    if not re.search('[a-z]', password):
+        return False
+    if not re.search('[0-9]', password):
+        return False
+    if not re.search('[!@#$%^&*(),.?":{}|<>]', password):
+        return False
+    return True
 
+# Validate game ID format
 
-def is_valid_game_id(game_id):
-    """Check if the game ID is formatted correctly."
-    # Game ID must be a UUID.
-    uuid_regex = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-    return bool(re.match(uuid_regex, game_id))
-
-# Example validation use cases
-if __name__ == '__main__':
-    print(is_valid_username('player1'))  # True
-    print(is_valid_email('test@example.com'))  # True
-    print(is_valid_score(100))  # True
-    print(is_valid_game_id('123e4567-e89b-12d3-a456-426614174000'))  # True
+def is_valid_game_id(game_id: str) -> bool:
+    """Check if the game ID format is correct."""
+    return re.match('^GAME-[0-9]{4}$', game_id) is not None
