@@ -1,25 +1,40 @@
 import logging
-import os
-from logging.handlers import RotatingFileHandler
 
-def setup_logger(name, log_file, level=logging.INFO):
-    """Set up a logger with rotation for log files."""
-    # Create a directory for logs if it doesn't exist
-    if not os.path.exists(os.path.dirname(log_file)):
-        os.makedirs(os.path.dirname(log_file))
+# Configure logging settings
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-    # Create a rotating file handler
-    handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=2)  # 5 MB max size
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
+# Create a logger for the game
+logger = logging.getLogger('game_logger')
 
-    # Get the specified logger and set level
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    return logger
+def log_info(message):
+    """Log information messages."""
+    logger.info(message)
+
+
+def log_warning(message):
+    """Log warning messages."""
+    logger.warning(message)
+
+
+def log_error(message):
+    """Log error messages."""
+    logger.error(message)
+
+
+def log_debug(message):
+    """Log debug messages, useful during development."""
+    logger.debug(message)
+
+
+def log_game_event(event_type, event_details):
+    """Log game events with type and details."""
+    logger.info(f'Event Type: {event_type}, Event Details: {event_details}')
 
 # Example usage
 if __name__ == '__main__':
-    logger = setup_logger('game_logger', 'logs/game.log')
-    logger.info('Logger is set up and ready to log.')
+    log_info('Game started')
+    log_warning('Low health warning')
+    log_error('Player connection lost')
+    log_debug('Debugging player input')
+    log_game_event('Score Update', {'player': 'Player1', 'score': 100})
