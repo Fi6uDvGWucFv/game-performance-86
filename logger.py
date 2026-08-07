@@ -1,40 +1,16 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
-# Configure logging settings
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Create a logger for the game
-logger = logging.getLogger('game_logger')
-
-def log_info(message):
-    """Log information messages."""
-    logger.info(message)
-
-
-def log_warning(message):
-    """Log warning messages."""
-    logger.warning(message)
-
-
-def log_error(message):
-    """Log error messages."""
-    logger.error(message)
-
-
-def log_debug(message):
-    """Log debug messages, useful during development."""
-    logger.debug(message)
-
-
-def log_game_event(event_type, event_details):
-    """Log game events with type and details."""
-    logger.info(f'Event Type: {event_type}, Event Details: {event_details}')
+def setup_logger(log_file='game.log', max_bytes=5 * 1024 * 1024, backup_count=3):
+    logger = logging.getLogger('game_logger')
+    logger.setLevel(logging.DEBUG)
+    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
 
 # Example usage
 if __name__ == '__main__':
-    log_info('Game started')
-    log_warning('Low health warning')
-    log_error('Player connection lost')
-    log_debug('Debugging player input')
-    log_game_event('Score Update', {'player': 'Player1', 'score': 100})
+    logger = setup_logger()
+    logger.info('Logger is set up and running.')
