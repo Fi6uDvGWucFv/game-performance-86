@@ -1,41 +1,32 @@
-from typing import List
+import time
+import random
+import requests
 
-class Game:
-    def __init__(self, name: str, players: List[str]) -> None:
-        """Initializes a new game.
+class NetworkError(Exception):
+    pass
 
-        Args:
-            name (str): The name of the game.
-            players (List[str]): A list of player names.
-        """
-        self.name = name
-        self.players = players
+def retry_request(url, retries=3, delay=2):
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an HTTPError for bad responses
+            return response.json()
+        except requests.HTTPError as http_err:
+            print(f'HTTP error occurred: {http_err}')
+        except requests.RequestException as req_err:
+            print(f'Request failed: {req_err}')
+            if attempt < retries - 1:
+                time.sleep(delay)
+                delay *= 2  # Exponential backoff
+            else:
+                raise NetworkError(f'Failed to fetch {url} after {retries} attempts')
+    return None
 
-    def start(self) -> None:
-        """Starts the game and announces the players."""
-        print(f'Starting game: {self.name}')
-        print('Players in this game:')
-        for player in self.players:
-            print(f'- {player}')
-
-    def add_player(self, player: str) -> None:
-        """Adds a player to the game.
-
-        Args:
-            player (str): The name of the player to add.
-        """
-        self.players.append(player)
-
-    def get_player_count(self) -> int:
-        """Returns the number of players in the game.
-
-        Returns:
-            int: The current player count.
-        """
-        return len(self.players)
-
+# Example usage
 if __name__ == '__main__':
-    game = Game('Battle Royale', ['Alice', 'Bob'])
-    game.start()
-    game.add_player('Charlie')
-    print(f'Total players: {game.get_player_count()}')
+    url = 'https://api.example.com/data'
+    try:
+        data = retry_request(url)
+        print(data)
+    except NetworkError as e:
+        print(e)
