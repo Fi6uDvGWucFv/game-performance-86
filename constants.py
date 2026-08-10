@@ -1,29 +1,43 @@
-FPS_TARGET = 60
+FPS_LIMIT = 60
 
-# Color constants
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+# Standard resolution for gameplay
+RESOLUTION = (1920, 1080)
 
-# Game state constants
-GAME_RUNNING = 'running'
-GAME_PAUSED = 'paused'
-GAME_OVER = 'game_over'
+# Game states
+class GameState:
+    MAIN_MENU = 'main_menu'
+    PLAYING = 'playing'
+    PAUSED = 'paused'
+    GAME_OVER = 'game_over'
 
-# Physics constants
-GRAVITY = 9.81  # Acceleration due to gravity in m/s^2
-FPS_TO_MS = 1000 / FPS_TARGET  # Convert frames per second to milliseconds
+# Default player settings
+DEFAULT_PLAYER_SETTINGS = {
+    'health': 100,
+    'speed': 5,
+    'damage': 10,
+    'armor': 1
+}
 
-# Screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+# Enemy types and their attributes
+ENEMY_TYPES = {
+    'goblin': {'health': 30, 'damage': 5},
+    'orc': {'health': 60, 'damage': 10},
+    'dragon': {'health': 150, 'damage': 25}
+}
 
-# Player constants
-PLAYER_SPEED = 5
-PLAYER_JUMP_HEIGHT = 15
+# Level settings
+LEVELS = [
+    {'name': 'Forest', 'difficulty': 1},
+    {'name': 'Cave', 'difficulty': 2},
+    {'name': 'Castle', 'difficulty': 3}
+]
 
-# Level constants
-LEVEL_COUNT = 5
-LEVEL_DIFFICULTY = {'easy': 1, 'medium': 2, 'hard': 3}
+# Key bindings
+KEY_BINDINGS = {
+    'move_up': 'w',
+    'move_down': 's',
+    'move_left': 'a',
+    'move_right': 'd',
+    'attack': 'space',
+    'pause': 'p'
+}
