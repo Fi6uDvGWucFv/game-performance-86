@@ -1,23 +1,40 @@
-import os
+import json
+from typing import Any, Dict
 
-class Config:
-    def __init__(self):
-        # Load configuration from environment variables
-        self.database_url = os.getenv('DATABASE_URL', 'sqlite:///default.db')
-        self.debug_mode = os.getenv('DEBUG_MODE', 'false').lower() == 'true'
-        self.max_connections = int(os.getenv('MAX_CONNECTIONS', 10))
-        self.timeout = int(os.getenv('TIMEOUT', 30))
+DEFAULTS = {
+    'resolution': '1920x1080',
+    'fullscreen': True,
+    'volume': 75,
+    'controls': {
+        'move_up': 'W',
+        'move_down': 'S',
+        'move_left': 'A',
+        'move_right': 'D'
+    }
+}
 
-    def get_database_url(self):
-        return self.database_url
+class ConfigLoader:
+    def __init__(self, filepath: str):
+        self.filepath = filepath
+        self.config = DEFAULTS.copy()
+        self.load_config()
 
-    def is_debug_mode(self):
-        return self.debug_mode
+    def load_config(self) -> None:
+        try:
+            with open(self.filepath, 'r') as file:
+                user_config = json.load(file)
+                self.config.update(user_config)
+        except FileNotFoundError:
+            print(f"Config file not found, using defaults.")
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON, using defaults.")
 
-    def get_max_connections(self):
-        return self.max_connections
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.config.get(key, default)
 
-    def get_timeout(self):
-        return self.timeout
+    def set(self, key: str, value: Any) -> None:
+        self.config[key] = value
 
-config = Config()
+    def save(self) -> None:
+        with open(self.filepath, 'w') as file:
+            json.dump(self.config, file, indent=4)
