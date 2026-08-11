@@ -1,36 +1,27 @@
-import json
-import logging
+import random
 
-# Set up logging configuration
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class GameHandler:
+    def __init__(self, player_name):
+        self.player_name = player_name
+        self.score = 0
 
-class GameError(Exception):
-    pass
+    def start_game(self):
+        print(f'Welcome {self.player_name}! Let the game begin!')
+        self.play_rounds(5)
 
-class InputError(GameError):
-    pass
+    def play_rounds(self, rounds):
+        for _ in range(rounds):
+            self.play_round()
+        print(f'Final Score: {self.score}')
 
-class NetworkError(GameError):
-    pass
+    def play_round(self):
+        outcome = random.choice(['win', 'lose'])
+        if outcome == 'win':
+            self.score += 10
+            print(f'You won this round! Current Score: {self.score}')
+        else:
+            print('You lost this round.')
 
-def handle_game_action(action):
-    try:
-        logger.info(f'Handling action: {action}')
-        if action not in ['start', 'stop', 'pause']:
-            raise InputError(f'Invalid action: {action}')
-        perform_action(action)
-    except InputError as ie:
-        logger.error(f'Input Error: {ie}')
-        return json.dumps({'success': False, 'error': str(ie)})
-    except NetworkError as ne:
-        logger.error(f'Network Error: {ne}')
-        return json.dumps({'success': False, 'error': str(ne)})
-    except Exception as e:
-        logger.exception('An unexpected error occurred')
-        return json.dumps({'success': False, 'error': 'An unexpected error occurred'})
-    return json.dumps({'success': True})
-
-def perform_action(action):
-    # Placeholder for action performance logic
-    pass
+if __name__ == '__main__':
+    player = GameHandler('Player1')
+    player.start_game()
