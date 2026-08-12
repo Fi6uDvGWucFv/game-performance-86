@@ -1,34 +1,31 @@
-import json
-import logging
+import sys
 
-logger = logging.getLogger(__name__)
+class GameInputHandler:
+    def __init__(self):
+        self.valid_commands = {'move', 'attack', 'defend', 'quit'}
 
-class GameHandler:
-    def __init__(self, game_data):
-        self.game_data = game_data
-        self.score = 0
-        self.level = 1
+    def get_user_input(self):
+        command = input('Enter command: ').strip().lower()
+        return command
 
-    def update_score(self, points):
-        self.score += points
-        logger.info(f'Score updated: {self.score}')
+    def validate_input(self, command):
+        if command not in self.valid_commands:
+            print(f'Invalid command: {command}')
+            return False
+        return True
 
-    def level_up(self):
-        self.level += 1
-        logger.info(f'Level increased to: {self.level}')
+    def process_commands(self):
+        while True:
+            command = self.get_user_input()
+            if command == 'quit':
+                print('Exiting game...')
+                sys.exit()
+            if self.validate_input(command):
+                self.execute_command(command)
 
-    def save_game(self, file_path):
-        try:
-            with open(file_path, 'w') as file:
-                json.dump(self.game_data, file)
-                logger.info('Game saved successfully')
-        except Exception as e:
-            logger.error(f'Error saving game: {e}')
+    def execute_command(self, command):
+        print(f'Executing command: {command}')
 
-    def load_game(self, file_path):
-        try:
-            with open(file_path, 'r') as file:
-                self.game_data = json.load(file)
-                logger.info('Game loaded successfully')
-        except Exception as e:
-            logger.error(f'Error loading game: {e}')
+if __name__ == '__main__':
+    input_handler = GameInputHandler()
+    input_handler.process_commands()
