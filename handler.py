@@ -1,27 +1,34 @@
-import random
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GameHandler:
-    def __init__(self, player_name):
-        self.player_name = player_name
+    def __init__(self, game_data):
+        self.game_data = game_data
         self.score = 0
+        self.level = 1
 
-    def start_game(self):
-        print(f'Welcome {self.player_name}! Let the game begin!')
-        self.play_rounds(5)
+    def update_score(self, points):
+        self.score += points
+        logger.info(f'Score updated: {self.score}')
 
-    def play_rounds(self, rounds):
-        for _ in range(rounds):
-            self.play_round()
-        print(f'Final Score: {self.score}')
+    def level_up(self):
+        self.level += 1
+        logger.info(f'Level increased to: {self.level}')
 
-    def play_round(self):
-        outcome = random.choice(['win', 'lose'])
-        if outcome == 'win':
-            self.score += 10
-            print(f'You won this round! Current Score: {self.score}')
-        else:
-            print('You lost this round.')
+    def save_game(self, file_path):
+        try:
+            with open(file_path, 'w') as file:
+                json.dump(self.game_data, file)
+                logger.info('Game saved successfully')
+        except Exception as e:
+            logger.error(f'Error saving game: {e}')
 
-if __name__ == '__main__':
-    player = GameHandler('Player1')
-    player.start_game()
+    def load_game(self, file_path):
+        try:
+            with open(file_path, 'r') as file:
+                self.game_data = json.load(file)
+                logger.info('Game loaded successfully')
+        except Exception as e:
+            logger.error(f'Error loading game: {e}')
