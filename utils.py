@@ -1,51 +1,40 @@
-from typing import List, Dict
+import json
 
 
-def calculate_average(scores: List[int]) -> float:
-    """
-    Calculate the average of a list of scores.
-
-    Args:
-        scores (List[int]): A list of integer scores.
-
-    Returns:
-        float: The average of the scores, or 0.0 if the list is empty.
-    """
-    if not scores:
-        return 0.0
-    return sum(scores) / len(scores)
-
-
-def format_score(score: int) -> str:
-    """
-    Format the score as a string with a suffix.
-
-    Args:
-        score (int): The score to format.
-
-    Returns:
-        str: The formatted score string.
-    """
-    return f'Score: {score}'
+def load_game_data(file_path):
+    """Load game data from a JSON file."""
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error: The file {file_path} is not a valid JSON.")
+        return None
 
 
-def filter_high_scores(scores: List[int], threshold: int) -> List[int]:
-    """
-    Filter the list of scores, keeping only those above the threshold.
-
-    Args:
-        scores (List[int]): A list of integer scores.
-        threshold (int): The score threshold.
-
-    Returns:
-        List[int]: A list of scores above the threshold.
-    """
-    return [score for score in scores if score > threshold]
+def save_game_data(file_path, data):
+    """Save game data to a JSON file."""
+    try:
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+    except IOError:
+        print(f"Error: An IOError occurred while writing to {file_path}.")
 
 
-# Example usage
-if __name__ == '__main__':
-    sample_scores = [88, 92, 79, 95, 84]
-    print('Average Score:', calculate_average(sample_scores))
-    print(format_score(92))
-    print('High Scores:', filter_high_scores(sample_scores, 90))
+def get_high_scores(data):
+    """Extract high scores from game data."""
+    if not isinstance(data, dict):
+        return []
+    return sorted(data.get('high_scores', []), reverse=True)
+
+
+def update_high_scores(data, new_score):
+    """Update high scores with a new score if it's high enough."""
+    if 'high_scores' not in data:
+        data['high_scores'] = []
+    if len(data['high_scores']) < 10 or new_score > min(data['high_scores']):
+        data['high_scores'].append(new_score)
+        data['high_scores'] = sorted(data['high_scores'], reverse=True)[:10]
