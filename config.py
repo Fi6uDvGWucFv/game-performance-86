@@ -1,40 +1,31 @@
 import json
-from typing import Any, Dict
+import os
 
-DEFAULTS = {
-    'resolution': '1920x1080',
-    'fullscreen': True,
-    'volume': 75,
-    'controls': {
-        'move_up': 'W',
-        'move_down': 'S',
-        'move_left': 'A',
-        'move_right': 'D'
-    }
-}
+class ConfigError(Exception):
+    pass
 
-class ConfigLoader:
-    def __init__(self, filepath: str):
+class Config:
+    def __init__(self, filepath):
         self.filepath = filepath
-        self.config = DEFAULTS.copy()
-        self.load_config()
+        self.config_data = self.load_config()
 
-    def load_config(self) -> None:
+    def load_config(self):
+        if not os.path.exists(self.filepath):
+            raise ConfigError(f"Configuration file not found: {self.filepath}")
         try:
             with open(self.filepath, 'r') as file:
-                user_config = json.load(file)
-                self.config.update(user_config)
-        except FileNotFoundError:
-            print(f"Config file not found, using defaults.")
-        except json.JSONDecodeError:
-            print(f"Error decoding JSON, using defaults.")
+                return json.load(file)
+        except json.JSONDecodeError as e:
+            raise ConfigError(f"Error parsing JSON from {self.filepath}: {e}")
+        except Exception as e:
+            raise ConfigError(f"Unexpected error loading config: {e}")
 
-    def get(self, key: str, default: Any = None) -> Any:
-        return self.config.get(key, default)
+    def get(self, key, default=None):
+        return self.config_data.get(key, default)
 
-    def set(self, key: str, value: Any) -> None:
-        self.config[key] = value
-
-    def save(self) -> None:
-        with open(self.filepath, 'w') as file:
-            json.dump(self.config, file, indent=4)
+    def save(self):
+        try:
+            with open(self.filepath, 'w') as file:
+                json.dump(self.config_data, file, indent=4)
+        except IOError as e:
+            raise ConfigError(f"Error saving config to {self.filepath}: {e}")
