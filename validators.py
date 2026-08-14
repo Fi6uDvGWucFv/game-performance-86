@@ -1,27 +1,20 @@
-import time
-import requests
+def validate_score(score):
+    if not isinstance(score, (int, float)):
+        raise ValueError('Score must be a number.')
+    if score < 0:
+        raise ValueError('Score cannot be negative.')
+    return True
 
-class NetworkError(Exception):
-    pass
+def validate_username(username):
+    if not isinstance(username, str):
+        raise ValueError('Username must be a string.')
+    if len(username) < 3 or len(username) > 20:
+        raise ValueError('Username must be between 3 and 20 characters.')
+    return True
 
-def retry_request(url, max_retries=3, delay=2):
-    retries = 0
-    while retries < max_retries:
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            retries += 1
-            if retries == max_retries:
-                raise NetworkError(f'Failed to fetch data after {max_retries} attempts: {e}')
-            time.sleep(delay)  # Wait before retrying
-
-# Example usage:
-# if __name__ == '__main__':
-#     url = 'https://api.example.com/data'
-#     try:
-#         data = retry_request(url)
-#         print(data)
-#     except NetworkError as e:
-#         print(e)
+if __name__ == '__main__':
+    try:
+        validate_score(10)
+        validate_username('player1')
+    except ValueError as e:
+        print(f'Validation error: {e}')
