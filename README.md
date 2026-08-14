@@ -1,50 +1,41 @@
 # Game Performance 86
 
-Game Performance 86 is a Python-based toolkit designed to analyze and enhance gaming performance metrics. Built to help developers identify bottlenecks and optimize gameplay, this library provides critical insights that can transform the gaming experience.
+Game Performance 86 is a Python-based tool designed to monitor and optimize the performance of your gaming sessions. It provides real-time analytics on various metrics, allowing gamers to enhance their gaming experience by identifying performance bottlenecks.
 
 ## Features
-- **Real-Time Performance Monitoring:** Track FPS, memory usage, and CPU load during gameplay to identify performance drains.
-- **Customizable Profiling:** Create profiles for different game scenarios, allowing targeted optimization for specific game modes or environments.
-- **Data Visualization:** Automatically generate visual reports of performance data to help developers interpret and address issues effectively.
-- **Compatibility:** Works seamlessly with various game engines such as Unity and Unreal Engine, as well as standalone Python games.
+- **Real-Time FPS Monitoring**: Get live updates on frames per second (FPS) to ensure smooth gameplay.
+- **Resource Usage Tracking**: Analyze CPU, GPU, and memory usage to identify any resource constraints during gaming.
+- **Customizable Alerts**: Set thresholds for performance metrics and receive notifications when they are exceeded.
+- **Detailed Reports**: Generate comprehensive reports to review performance metrics over time, helping you make informed decisions about game settings.
 
 ## Installation
 
-To install Game Performance 86, clone the repository and install the necessary dependencies. Run the following commands:
+To install Game Performance 86, ensure you have Python 3.6 or greater installed on your system. Then, execute the following commands in your terminal:
 
 ```bash
-git clone https://github.com/yourusername/game-performance-86.git
+git clone https://github.com/Developer/game-performance-86.git
 cd game-performance-86
 pip install -r requirements.txt
 ```
 
-## Basic Usage Example
+## Basic Usage
 
-Here’s a quick example to get you started with Game Performance 86. The following code demonstrates how to initialize the performance monitor and log data:
+After installation, you can start monitoring your gaming performance with just a simple command. Run the following command in your terminal:
 
-```python
-from game_performance import PerformanceMonitor
-
-# Initialize the performance monitor
-monitor = PerformanceMonitor()
-
-# Start monitoring
-monitor.start()
-
-# Game loop (example)
-while True:
-    # Your game logic here
-    monitor.update()  # Update performance metrics
-
-# Stop monitoring and log results
-monitor.stop()
-monitor.log_results('performance_report.txt')
+```bash
+python performance_monitor.py
 ```
 
-This snippet provides a simple way to monitor your game’s performance, capturing crucial metrics in real-time.
+Once running, the tool will display real-time FPS, CPU, GPU, and memory usage, along with any alerts if thresholds are exceeded. For detailed logging, use:
+
+```bash
+python performance_monitor.py --log
+```
+
+This will create a performance_report.txt file in the current directory with a complete overview of your gaming session.
+
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## License
-
-![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
