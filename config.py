@@ -1,31 +1,41 @@
 import json
 import os
 
-class ConfigError(Exception):
-    pass
+class ConfigLoader:
+    DEFAULT_CONFIG = {
+        'screen_width': 800,
+        'screen_height': 600,
+        'fullscreen': False,
+        'fps': 60,
+        'audio_volume': 0.5,
+    }
 
-class Config:
-    def __init__(self, filepath):
-        self.filepath = filepath
-        self.config_data = self.load_config()
+    def __init__(self, config_file='config.json'):
+        self.config_file = config_file
+        self.config = self.load_config()
 
     def load_config(self):
-        if not os.path.exists(self.filepath):
-            raise ConfigError(f"Configuration file not found: {self.filepath}")
-        try:
-            with open(self.filepath, 'r') as file:
-                return json.load(file)
-        except json.JSONDecodeError as e:
-            raise ConfigError(f"Error parsing JSON from {self.filepath}: {e}")
-        except Exception as e:
-            raise ConfigError(f"Unexpected error loading config: {e}")
+        # Load config from a JSON file or use defaults
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as file:
+                try:
+                    return {**self.DEFAULT_CONFIG, **json.load(file)}
+                except json.JSONDecodeError:
+                    print('Error: Invalid JSON format in config file. Using defaults.')
+                    return self.DEFAULT_CONFIG
+        else:
+            print('Config file not found. Using defaults.')
+            return self.DEFAULT_CONFIG
 
-    def get(self, key, default=None):
-        return self.config_data.get(key, default)
+    def get(self, key):
+        # Get a config value by key
+        return self.config.get(key, None)
+
+    def set(self, key, value):
+        # Set a config value by key
+        self.config[key] = value
 
     def save(self):
-        try:
-            with open(self.filepath, 'w') as file:
-                json.dump(self.config_data, file, indent=4)
-        except IOError as e:
-            raise ConfigError(f"Error saving config to {self.filepath}: {e}")
+        # Save current configuration to the file
+        with open(self.config_file, 'w') as file:
+            json.dump(self.config, file, indent=4)  
