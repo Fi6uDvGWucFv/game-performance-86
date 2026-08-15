@@ -1,33 +1,30 @@
-import numpy as np
-import pandas as pd
+import random
+import sys
 
-class GameDataProcessor:
-    def __init__(self, data):
-        self.data = data
-
-    def clean_data(self):
-        self.data.dropna(inplace=True)  # Remove missing values
-        self.data = self.data[self.data['score'] >= 0]  # Filter out negative scores
-
-    def normalize_scores(self):
-        score_max = self.data['score'].max()
-        score_min = self.data['score'].min()
-        self.data['normalized_score'] = (self.data['score'] - score_min) / (score_max - score_min)  # Normalize scores to [0, 1]
-
-    def process(self):
-        self.clean_data()  # Clean the input data
-        self.normalize_scores()  # Normalize scores
-
-    def get_processed_data(self):
-        return self.data
+def get_user_input():
+    try:
+        user_input = int(input('Enter a number between 1 and 10: '))
+        if 1 <= user_input <= 10:
+            return user_input
+        else:
+            print('Input out of range. Please try again.')
+            return get_user_input()  # Recursively prompt for valid input
+    except ValueError:
+        print('Invalid input. Please enter a number.')
+        return get_user_input()  # Recursively prompt for valid input
 
 
-# Example usage:
+def main_loop():
+    while True:
+        user_number = get_user_input()
+        random_number = random.randint(1, 10)
+        print(f'You guessed: {user_number}, Random number: {random_number}')
+        if user_number == random_number:
+            print('Congratulations! You guessed correctly!')
+            break
+        else:
+            print('Try again!')
+
+
 if __name__ == '__main__':
-    sample_data = pd.DataFrame({
-        'player': ['Alice', 'Bob', 'Charlie', 'David'],
-        'score': [100, np.nan, -50, 75]
-    })
-    processor = GameDataProcessor(sample_data)
-    processor.process()
-    print(processor.get_processed_data())
+    main_loop()
