@@ -1,32 +1,37 @@
-import time
 import random
-import requests
 
-class NetworkError(Exception):
-    pass
+class Game:
+    def __init__(self, name, max_players):
+        self.name = name
+        self.max_players = max_players
+        self.players = []
 
-def retry_request(url, retries=3, delay=2):
-    for attempt in range(retries):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an HTTPError for bad responses
-            return response.json()
-        except requests.HTTPError as http_err:
-            print(f'HTTP error occurred: {http_err}')
-        except requests.RequestException as req_err:
-            print(f'Request failed: {req_err}')
-            if attempt < retries - 1:
-                time.sleep(delay)
-                delay *= 2  # Exponential backoff
-            else:
-                raise NetworkError(f'Failed to fetch {url} after {retries} attempts')
-    return None
+    def add_player(self, player):
+        if len(self.players) < self.max_players:
+            self.players.append(player)
+            return True
+        return False
+
+    def start(self):
+        if len(self.players) == self.max_players:
+            print(f'Starting game: {self.name}')
+            return True
+        print('Not enough players to start the game.')
+        return False
+
+    def generate_random_number(self, min_val, max_val):
+        return random.randint(min_val, max_val)
+
+    def show_players(self):
+        return self.players
 
 # Example usage
 if __name__ == '__main__':
-    url = 'https://api.example.com/data'
-    try:
-        data = retry_request(url)
-        print(data)
-    except NetworkError as e:
-        print(e)
+    game = Game('Mystery Dungeon', 4)
+    game.add_player('Alice')
+    game.add_player('Bob')
+    game.add_player('Charlie')
+    game.add_player('Diana')
+    game.start()
+    print('Players in the game:', game.show_players())
+    print('Random number generated:', game.generate_random_number(1, 100))
