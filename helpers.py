@@ -1,35 +1,57 @@
-import random
-import time
+import json
+from typing import Any, Dict, List
 
-class GameHelper:
-    def __init__(self):
-        pass
 
-    @staticmethod
-    def generate_random_number(min_value: int, max_value: int) -> int:
-        """Generate a random integer within a specific range."""
-        return random.randint(min_value, max_value)
+def load_game_data(file_path: str) -> Dict[str, Any]:
+    """
+    Load game data from a JSON file.
     
-    @staticmethod
-    def wait(seconds: int) -> None:
-        """Pause execution for a specified number of seconds."""
-        time.sleep(seconds)
+    Args:
+        file_path (str): The path to the JSON file.
     
-    @staticmethod
-    def format_score(score: int) -> str:
-        """Format the score for display."""
-        return f'Score: {score}'
-    
-    @staticmethod
-    def is_game_over(lives: int) -> bool:
-        """Check if the game is over based on lives."""
-        return lives <= 0
+    Returns:
+        Dict[str, Any]: The loaded game data.
+    """
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return data
 
-# Example usage
-if __name__ == '__main__':
-    helper = GameHelper()
-    random_number = helper.generate_random_number(1, 100)
-    print(f'Generated random number: {random_number}')
-    helper.wait(2)
-    print(helper.format_score(42))
-    print('Game over:', helper.is_game_over(0))
+
+def save_game_data(file_path: str, data: Dict[str, Any]) -> None:
+    """
+    Save game data to a JSON file.
+    
+    Args:
+        file_path (str): The path to save the JSON file.
+        data (Dict[str, Any]): The game data to save.
+    """
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def filter_high_scores(scores: List[Dict[str, Any]], min_score: int) -> List[Dict[str, Any]]:
+    """
+    Filter high scores above a minimum threshold.
+    
+    Args:
+        scores (List[Dict[str, Any]]): List of player scores.
+        min_score (int): The minimum score to filter.
+    
+    Returns:
+        List[Dict[str, Any]]: Filtered list of scores.
+    """
+    return [score for score in scores if score['score'] > min_score]
+
+
+def get_average_score(scores: List[Dict[str, Any]]) -> float:
+    """
+    Calculate the average score from a list.
+    
+    Args:
+        scores (List[Dict[str, Any]]): List of player scores.
+    
+    Returns:
+        float: The average score.
+    """
+    total_score = sum(score['score'] for score in scores)
+    return total_score / len(scores) if scores else 0.0
