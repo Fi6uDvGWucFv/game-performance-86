@@ -1,25 +1,28 @@
 import logging
-from logging.handlers import RotatingFileHandler
 
+# Configure the logger
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-def setup_logger(name='GameLogger', log_file='game.log', level=logging.INFO):
-    """Sets up a logger with rotation capability."""
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
+# Create a logger object
+logger = logging.getLogger('GameLogger')
 
-    handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=2)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
+def log_info(message: str) -> None:
+    """Logs an informational message."""
+    logger.info(message)
 
-    if not logger.hasHandlers():  
-        logger.addHandler(handler)
+def log_warning(message: str) -> None:
+    """Logs a warning message."""
+    logger.warning(message)
 
-    return logger
+def log_error(message: str) -> None:
+    """Logs an error message."""
+    logger.error(message)
 
+def log_debug(message: str) -> None:
+    """Logs a debug message."""
+    logger.debug(message)
 
-# Example usage:
-if __name__ == '__main__':
-    log = setup_logger()
-    log.info('Logger is set up and ready!')
-    log.warning('This is a warning message.')
-    log.error('This is an error message.')
+def log_exception(message: str) -> None:
+    """Logs an exception message with stack trace."""
+    logger.exception(message)
