@@ -1,41 +1,29 @@
 import json
 import os
 
-class ConfigLoader:
-    DEFAULT_CONFIG = {
-        'screen_width': 800,
-        'screen_height': 600,
-        'fullscreen': False,
-        'fps': 60,
-        'audio_volume': 0.5,
-    }
-
+class Config:
     def __init__(self, config_file='config.json'):
         self.config_file = config_file
-        self.config = self.load_config()
+        self.data = self.load_config()
 
     def load_config(self):
-        # Load config from a JSON file or use defaults
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as file:
-                try:
-                    return {**self.DEFAULT_CONFIG, **json.load(file)}
-                except json.JSONDecodeError:
-                    print('Error: Invalid JSON format in config file. Using defaults.')
-                    return self.DEFAULT_CONFIG
-        else:
-            print('Config file not found. Using defaults.')
-            return self.DEFAULT_CONFIG
+        if not os.path.exists(self.config_file):
+            raise FileNotFoundError(f'Config file {self.config_file} not found.')
+        with open(self.config_file, 'r') as file:
+            return json.load(file)
 
-    def get(self, key):
-        # Get a config value by key
-        return self.config.get(key, None)
+    def get(self, key, default=None):
+        return self.data.get(key, default)
 
     def set(self, key, value):
-        # Set a config value by key
-        self.config[key] = value
+        self.data[key] = value
+        self.save_config()
 
-    def save(self):
-        # Save current configuration to the file
+    def save_config(self):
         with open(self.config_file, 'w') as file:
-            json.dump(self.config, file, indent=4)  
+            json.dump(self.data, file, indent=4)
+
+# Usage example
+# config = Config()
+# print(config.get('screen_width', 800))
+# config.set('screen_height', 600)
