@@ -1,41 +1,44 @@
-# Game Performance 86
+# game-performance-86
 
-Game Performance 86 is a Python-based tool designed to monitor and optimize the performance of your gaming sessions. It provides real-time analytics on various metrics, allowing gamers to enhance their gaming experience by identifying performance bottlenecks.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+game-performance-86 is a Python library for profiling and optimizing performance in real-time games. It helps developers identify frame time inconsistencies, memory spikes, and subsystem bottlenecks without adding significant overhead to the game loop.
 
 ## Features
-- **Real-Time FPS Monitoring**: Get live updates on frames per second (FPS) to ensure smooth gameplay.
-- **Resource Usage Tracking**: Analyze CPU, GPU, and memory usage to identify any resource constraints during gaming.
-- **Customizable Alerts**: Set thresholds for performance metrics and receive notifications when they are exceeded.
-- **Detailed Reports**: Generate comprehensive reports to review performance metrics over time, helping you make informed decisions about game settings.
+- Microsecond-accurate frame timing with percentile analysis (p50, p99)
+- Memory allocation tracking for textures, audio buffers, and object pools
+- Automatic detection of hitches and long frames with stack context
+- Native integration hooks for Pygame and custom rendering pipelines
 
 ## Installation
 
-To install Game Performance 86, ensure you have Python 3.6 or greater installed on your system. Then, execute the following commands in your terminal:
+```bash
+pip install game-performance-86
+```
+
+For development installation:
 
 ```bash
 git clone https://github.com/Developer/game-performance-86.git
 cd game-performance-86
-pip install -r requirements.txt
+pip install -e .
 ```
 
-## Basic Usage
+## Usage
 
-After installation, you can start monitoring your gaming performance with just a simple command. Run the following command in your terminal:
+```python
+from game_performance_86 import GameProfiler
 
-```bash
-python performance_monitor.py
+profiler = GameProfiler()
+
+running = True
+while running:
+    with profiler.profile_frame():
+        process_input()
+        update_world()
+        render_scene()
+
+profiler.save_report("perf_report.json")
 ```
 
-Once running, the tool will display real-time FPS, CPU, GPU, and memory usage, along with any alerts if thresholds are exceeded. For detailed logging, use:
-
-```bash
-python performance_monitor.py --log
-```
-
-This will create a performance_report.txt file in the current directory with a complete overview of your gaming session.
-
-![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The profiler can run in both development and lightly instrumented release builds.
