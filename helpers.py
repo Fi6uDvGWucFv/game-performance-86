@@ -1,62 +1,36 @@
-import time
-from collections import deque
-import math
+import statistics
+from typing import List, Dict
 
-def calculate_fps(last_time: float, current_time: float = None) -> float:
-    """Calculate instantaneous FPS from time delta."""
-    if current_time is None:
-        current_time = time.time()
-    delta = current_time - last_time
-    if delta <= 0:
-        return 0.0
-    return 1.0 / delta
-
-def update_fps_history(history: deque, fps: float, max_size: int = 60) -> None:
-    """Append FPS value to history deque, limit size."""
-    history.append(fps)
-    if len(history) > max_size:
-        history.popleft()
-
-def get_average_fps(history: deque) -> float:
-    """Compute average FPS from deque history."""
-    if len(history) == 0:
-        return 0.0
-    return sum(history) / len(history)
-
-def is_performance_poor(avg_fps: float, threshold: float = 30.0) -> bool:
-    """Determine if average FPS indicates poor performance."""
-    return 0 < avg_fps < threshold
-
-def frame_time_ms(fps: float) -> float:
-    """Convert FPS to milliseconds per frame."""
-    if fps <= 0:
-        return 0.0
-    return 1000.0 / fps
-
-def normalize_coords(x: float, y: float, max_x: float, max_y: float) -> tuple[float, float]:
-    """Scale coordinates to [0, 1] range."""
-    if max_x <= 0 or max_y <= 0:
-        return (0.0, 0.0)
-    return (x / max_x, y / max_y)
-
-def euclidean_distance(x1: float, y1: float, x2: float, y2: float) -> float:
-    """Calculate distance between points."""
-    return math.hypot(x2 - x1, y2 - y1)
-
-def clamp_to_range(value: float, minimum: float, maximum: float) -> float:
-    """Restrict value to specified range."""
-    return max(minimum, min(value, maximum))
-
-if __name__ == "__main__":
-    history = deque(maxlen=60)
-    last = time.time()
-    for i in range(5):
-        time.sleep(0.033)  # approx 30 fps
-        now = time.time()
-        fps = calculate_fps(last, now)
-        update_fps_history(history, fps)
-        last = now
-    avg_fps = get_average_fps(history)
-    print(f"Avg FPS: {avg_fps:.2f}")
-    print(f"Poor perf: {is_performance_poor(avg_fps)}")
-    print(f"Frame time: {frame_time_ms(avg_fps):.2f} ms")
+def calculate_frame_metrics(frame_times_ms: List[float]) -> Dict[str, float]:
+    """
+    Calculate key performance metrics from a list of frame times in milliseconds.
+    
+    Args:
+        frame_times_ms: List of frame rendering durations in milliseconds.
+        
+    Returns:
+        Dictionary containing average FPS, 1% low FPS, and stutter count.
+    """
+    if not frame_times_ms:
+        return {"avg_fps": 0.0, "one_percent_low_fps": 0.0, "stutter_count": 0}
+    
+    # Calculate average FPS
+    avg_frame_time = statistics.mean(frame_times_ms)
+    avg_fps = 1000.0 / avg_frame_time if avg_frame_time > 0 else 0.0
+    
+    # Calculate 1% low FPS (99th percentile frame times)
+    sorted_times = sorted(frame_times_ms)
+    percentile_index = int(len(sorted_times) * 0.99)
+    percentile_index = min(percentile_index, len(sorted_times) - 1)
+    p99_frame_time = sorted_times[percentile_index]
+    one_percent_low_fps = 1000.0 / p99_frame_time if p99_frame_time > 0 else 0.0
+    
+    # Identify stutters (frame time > 2.0x the average)
+    stutter_threshold = avg_frame_time * 2.0
+    stutter_count = sum(1 for ft in frame_times_ms if ft > stutter_threshold)
+    
+    return {
+        "avg_fps": round(avg_fps, 2),
+        "one_percent_low_fps": round(one_percent_low_fps, 2),
+        "stutter_count": stutter_count
+    }
