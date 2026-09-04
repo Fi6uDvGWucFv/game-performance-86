@@ -1,30 +1,29 @@
-import random
-import sys
+from typing import List, Dict, Optional
 
-def get_user_input():
-    try:
-        user_input = int(input('Enter a number between 1 and 10: '))
-        if 1 <= user_input <= 10:
-            return user_input
-        else:
-            print('Input out of range. Please try again.')
-            return get_user_input()  # Recursively prompt for valid input
-    except ValueError:
-        print('Invalid input. Please enter a number.')
-        return get_user_input()  # Recursively prompt for valid input
+def normalize_frame_times(frame_times: List[float], target_fps: int = 60) -> List[float]:
+    """Calculates frame time variance against target performance metrics."""
+    if not frame_times:
+        return []
 
+    target_ms = 1000.0 / target_fps
+    return [max(0.0, ft - target_ms) for ft in frame_times]
 
-def main_loop():
-    while True:
-        user_number = get_user_input()
-        random_number = random.randint(1, 10)
-        print(f'You guessed: {user_number}, Random number: {random_number}')
-        if user_number == random_number:
-            print('Congratulations! You guessed correctly!')
-            break
-        else:
-            print('Try again!')
+def calculate_hit_rate(hits: int, total_attempts: int) -> float:
+    """Determines precision accuracy percentage for gaming events."""
+    if total_attempts <= 0:
+        return 0.0
+    return (hits / total_attempts) * 100.0
 
+def aggregate_telemetry(data: List[Dict[str, float]]) -> Dict[str, float]:
+    """Computes average performance metrics from raw telemetry input."""
+    if not data:
+        return {"avg_fps": 0.0, "avg_latency": 0.0}
 
-if __name__ == '__main__':
-    main_loop()
+    keys = ["fps", "latency"]
+    sums = {k: 0.0 for k in keys}
+    for entry in data:
+        for k in keys:
+            sums[k] += entry.get(k, 0.0)
+
+    count = len(data)
+    return {f"avg_{k}": v / count for k, v in sums.items()}
