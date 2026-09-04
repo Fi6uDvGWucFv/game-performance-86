@@ -1,32 +1,23 @@
-import time
-import functools
-import logging
+from typing import List, Dict, Union, Optional
 
-logger = logging.getLogger(__name__)
+def calculate_frame_delta(timestamps: List[float]) -> List[float]:
+    """Calculates time differences between sequential frame timestamps."""
+    if len(timestamps) < 2:
+        return []
+    return [timestamps[i+1] - timestamps[i] for i in range(len(timestamps) - 1)]
 
-def retry_network_op(retries=3, delay=1, backoff=2):
-    """Decorator for retrying network operations with exponential backoff."""
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            attempt = 0
-            current_delay = delay
-            while attempt < retries:
-                try:
-                    return func(*args, **kwargs)
-                except (ConnectionError, TimeoutError) as e:
-                    attempt += 1
-                    if attempt == retries:
-                        logger.error(f"Final attempt {attempt} failed: {e}")
-                        raise
-                    logger.warning(f"Attempt {attempt} failed, retrying in {current_delay}s...")
-                    time.sleep(current_delay)
-                    current_delay *= backoff
-        return wrapper
-    return decorator
+def format_performance_metrics(metrics: Dict[str, Union[int, float]]) -> str:
+    """Formats raw engine metrics into a readable summary string."""
+    parts = [f"{k}: {v:.2f}" if isinstance(v, float) else f"{k}: {v}" for k, v in metrics.items()]
+    return " | ".join(parts)
 
-def validate_connection_status(status_code):
-    """Simple check for HTTP response validity."""
-    if 200 <= status_code < 300:
-        return True
-    return False
+def filter_stutter_frames(deltas: List[float], threshold_ms: float = 33.3) -> List[float]:
+    """Returns only frames exceeding the specified stutter threshold."""
+    return [d for d in deltas if d > (threshold_ms / 1000.0)]
+
+def get_average_fps(deltas: List[float]) -> Optional[float]:
+    """Calculates average frames per second from delta times."""
+    if not deltas:
+        return None
+    avg_delta = sum(deltas) / len(deltas)
+    return 1.0 / avg_delta if avg_delta > 0 else 0.0
