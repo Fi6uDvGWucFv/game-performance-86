@@ -2,27 +2,30 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-def setup_logger(name: str, log_file: str = 'game_perf.log') -> logging.Logger:
-    """Initializes a rotating file logger for performance tracking."""
+def setup_logger(name='game_performance_86', log_file='game.log', level=logging.INFO):
+    """
+    Configures a rotating file logger for performance tracking.
+    Max file size: 5MB, keep 3 backup files.
+    """
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
 
-    # Prevent duplicate handlers if re-initialized
+    # Prevent duplicate handlers if function is called multiple times
     if not logger.handlers:
-        # 5MB per file, keep 3 backups
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+
+        # Rotate logs: 5MB per file, max 3 files
         handler = RotatingFileHandler(
             log_file, 
             maxBytes=5 * 1024 * 1024, 
             backupCount=3
         )
-        
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-        
-        # Optional: console output
+
+        # Optional: Log to console as well
         console = logging.StreamHandler()
         console.setFormatter(formatter)
         logger.addHandler(console)
