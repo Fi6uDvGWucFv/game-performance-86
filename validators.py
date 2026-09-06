@@ -1,32 +1,27 @@
-def validate_input(user_input):
-    """
-    Validate the user input for the game.
-    Checks for empty strings and unwanted characters.
-    """
-    if not user_input:
-        raise ValueError("Input cannot be empty.")
-    if not all(c.isalnum() or c.isspace() for c in user_input):
-        raise ValueError("Input must contain only alphanumeric characters and spaces.")
-    return True
+from functools import lru_cache
+import re
 
+# compiled regex patterns for performance
+_ENTITY_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
 
-def get_user_input():
-    """
-    Get and validate user input.
-    """
-    while True:
-        user_input = input("Enter your command: ")
-        try:
-            validate_input(user_input)
-            return user_input
-        except ValueError as e:
-            print(f"Invalid input: {e}")
+@lru_cache(maxsize=1024)
+def validate_entity_id(entity_id: str) -> bool:
+    """validates entity strings using cached regex results"""
+    if not entity_id or len(entity_id) > 64:
+        return False
+    return bool(_ENTITY_ID_PATTERN.match(entity_id))
 
-# Example usage in the main loop
-if __name__ == '__main__':
-    while True:
-        command = get_user_input()
-        if command.lower() == 'quit':
-            break
-        # Process the command
-        print(f'Processing command: {command}')
+def batch_validate_ids(id_list: list[str]) -> list[bool]:
+    """bulk processing of id validation for frames"""
+    return [validate_entity_id(uid) for uid in id_list]
+
+class PerformanceValidator:
+    """validator class with precomputed internal constraints"""
+    __slots__ = ('threshold',)
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+
+    def check_frame_budget(self, frame_time: float) -> bool:
+        """checks if frame performance meets thresholds"""
+        return frame_time <= self.threshold
