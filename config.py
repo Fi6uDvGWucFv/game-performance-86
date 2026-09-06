@@ -1,70 +1,53 @@
 import json
-from typing import Dict, Any, Optional
+import os
+from typing import Any, Dict
 
-class GameConfig:
-    """Manages game performance and display settings."""
+DEFAULT_CONFIG = {
+    "target_fps": 60,
+    "monitor_interval_seconds": 1.0,
+    "enable_telemetry": True,
+    "log_level": "INFO",
+    "output_directory": "./perf_logs",
+    "alert_threshold_low_fps": 45,
+}
 
-    def __init__(self, config_path: str = "game_config.json") -> None:
-        """Initialize GameConfig with optional config file path."""
-        self.config_path: str = config_path
-        self.settings: Dict[str, Any] = {
-            "resolution": (1920, 1080),
-            "target_fps": 60,
-            "graphics_quality": "high",
-            "fullscreen": True,
-            "vsync_enabled": True,
-            "anti_aliasing": "medium"
-        }
-        self._load_config()
+class ConfigLoader:
+    """Loads and manages game performance configuration settings with sensible defaults."""
 
-    def _load_config(self) -> None:
-        """Load settings from JSON file, falling back to defaults."""
+    def __init__(self, filepath: str = "perf_config.json") -> None:
+        self.filepath = filepath
+        self.config = DEFAULT_CONFIG.copy()
+        self.load()
+
+    def load(self) -> None:
+        """Loads configuration from file, falling back to defaults if missing or invalid."""
+        if not os.path.exists(self.filepath):
+            self.save()
+            return
+
         try:
-            with open(self.config_path, "r") as file:
-                loaded_settings: Dict[str, Any] = json.load(file)
-                self.settings.update(loaded_settings)
-        except (FileNotFoundError, json.JSONDecodeError):
-            # Use default settings if file missing or invalid
-            pass
-
-    def get_setting(self, key: str) -> Optional[Any]:
-        """Retrieve a configuration value by key."""
-        return self.settings.get(key)
-
-    def set_setting(self, key: str, value: Any) -> None:
-        """Update a configuration value."""
-        if key in self.settings:
-            self.settings[key] = value
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                loaded_data = json.load(f)
+                if isinstance(loaded_data, dict):
+                    for key, value in loaded_data.items():
+                        if key in self.config:
+                            # Basic type matching validation based on defaults
+                            if isinstance(value, type(self.config[key])):
+                                self.config[key] = value
+        except (json.JSONDecodeError, OSError):
+            self.config = DEFAULT_CONFIG.copy()
 
     def save(self) -> None:
-        """Persist current settings to the config file."""
-        with open(self.config_path, "w") as file:
-            json.dump(self.settings, file, indent=2)
+        """Saves current configuration state back to the file."""
+        try:
+            directory = os.path.dirname(os.path.abspath(self.filepath))
+            if directory:
+                os.makedirs(directory, exist_ok=True)
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=4)
+        except OSError:
+            pass
 
-    def get_performance_settings(self) -> Dict[str, Any]:
-        """Extract performance-related settings for optimization."""
-        return {
-            "target_fps": self.settings["target_fps"],
-            "graphics_quality": self.settings["graphics_quality"],
-            "vsync_enabled": self.settings["vsync_enabled"]
-        }
-
-    def update_resolution(self, width: int, height: int) -> None:
-        """Set new resolution with type validation."""
-        if width > 0 and height > 0:
-            self.settings["resolution"] = (width, height)
-
-def create_default_config(path: str) -> GameConfig:
-    """Factory function to create and save default config."""
-    config = GameConfig(path)
-    config.save()
-    return config
-
-# Example usage for testing
-if __name__ == "__main__":
-    config = create_default_config("test_config.json")
-    print(config.get_setting("target_fps"))
-    config.set_setting("target_fps", 120)
-    perf = config.get_performance_settings()
-    print(perf)
-    config.save()
+    def get(self, key: str) -> Any:
+        """Retrieves a configuration value safely with fallback to hardcoded default."""
+        return self.config.get(key, DEFAULT_CONFIG.get(key))
