@@ -1,44 +1,44 @@
 # game-performance-86
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-game-performance-86 is a Python library for profiling and optimizing performance in real-time games. It helps developers identify frame time inconsistencies, memory spikes, and subsystem bottlenecks without adding significant overhead to the game loop.
+A high-performance Python toolkit designed to analyze and optimize system resource allocation for competitive gaming. This utility bridges the gap between hardware telemetry and game engine behavior to minimize input lag and frame stutter.
 
 ## Features
-- Microsecond-accurate frame timing with percentile analysis (p50, p99)
-- Memory allocation tracking for textures, audio buffers, and object pools
-- Automatic detection of hitches and long frames with stack context
-- Native integration hooks for Pygame and custom rendering pipelines
+
+*   **Real-time Process Priority Management:** Automatically elevates your active game process and assigns CPU affinity to prevent background task interference.
+*   **Thermal Throttling Monitor:** Tracks GPU and CPU junction temperatures, triggering proactive fan profile adjustments via external hardware drivers.
+*   **Dynamic Background Cleanup:** Periodically purges system memory caches and suspends non-essential telemetry services during active gaming sessions.
+*   **Frame-Time Log Analyzer:** Parses standard CSV export files from engine overlays (like PresentMon) to calculate 0.1% and 1% low frame rates.
 
 ## Installation
 
-```bash
-pip install game-performance-86
-```
-
-For development installation:
+Ensure you have Python 3.9+ installed. It is recommended to run this tool in a virtual environment.
 
 ```bash
+# Clone the repository
 git clone https://github.com/Developer/game-performance-86.git
 cd game-performance-86
-pip install -e .
+
+# Install required dependencies
+pip install -r requirements.txt
 ```
 
 ## Usage
 
-```python
-from game_performance_86 import GameProfiler
+To start the optimization monitor in background mode, target your game executable by name:
 
-profiler = GameProfiler()
-
-running = True
-while running:
-    with profiler.profile_frame():
-        process_input()
-        update_world()
-        render_scene()
-
-profiler.save_report("perf_report.json")
+```bash
+# Run with administrative privileges for process management
+sudo python main.py --process "elden_ring.exe" --priority high
 ```
 
-The profiler can run in both development and lightly instrumented release builds.
+To run a diagnostic on an existing frame-time log:
+
+```bash
+python analyzer.py --input logs/session_01.csv --report summary
+```
+
+## License
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
