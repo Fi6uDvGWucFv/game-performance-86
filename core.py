@@ -1,37 +1,33 @@
-import random
+import time
+import logging
+import functools
+from typing import Callable, Any
 
-class Game:
-    def __init__(self, name, max_players):
-        self.name = name
-        self.max_players = max_players
-        self.players = []
+logger = logging.getLogger('game-performance-86')
 
-    def add_player(self, player):
-        if len(self.players) < self.max_players:
-            self.players.append(player)
-            return True
-        return False
+def retry_network_operation(max_retries: int = 3, delay: float = 1.0):
+    """Decorator for retrying unstable network calls."""
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            last_exception = None
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except (ConnectionError, TimeoutError) as e:
+                    last_exception = e
+                    logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
+                    time.sleep(delay)
+            
+            logger.error(f"Operation failed after {max_retries} attempts.")
+            raise last_exception
+        return wrapper
+    return decorator
 
-    def start(self):
-        if len(self.players) == self.max_players:
-            print(f'Starting game: {self.name}')
-            return True
-        print('Not enough players to start the game.')
-        return False
-
-    def generate_random_number(self, min_val, max_val):
-        return random.randint(min_val, max_val)
-
-    def show_players(self):
-        return self.players
-
-# Example usage
-if __name__ == '__main__':
-    game = Game('Mystery Dungeon', 4)
-    game.add_player('Alice')
-    game.add_player('Bob')
-    game.add_player('Charlie')
-    game.add_player('Diana')
-    game.start()
-    print('Players in the game:', game.show_players())
-    print('Random number generated:', game.generate_random_number(1, 100))
+@retry_network_operation(max_retries=3, delay=2.0)
+def fetch_game_data(endpoint: str):
+    """Example network operation requiring robustness."""
+    # Simulation of network interaction
+    if not endpoint:
+        raise ConnectionError("Failed to connect to game server")
+    return {"status": "success", "data": "performance_metrics"}
