@@ -2,52 +2,52 @@ import json
 import os
 from typing import Any, Dict
 
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG: Dict[str, Any] = {
     "target_fps": 60,
-    "monitor_interval_seconds": 1.0,
-    "enable_telemetry": True,
+    "resolution_scale": 1.0,
+    "enable_vsync": True,
+    "shadow_quality": "medium",
+    "texture_filtering": "anisotropic_4x",
+    "max_dynamic_lights": 16,
+    "physics_ticks_per_second": 50,
     "log_level": "INFO",
-    "output_directory": "./perf_logs",
-    "alert_threshold_low_fps": 45,
 }
 
+
 class ConfigLoader:
-    """Loads and manages game performance configuration settings with sensible defaults."""
+    """Loads and manages gaming performance configuration settings with sensible defaults."""
 
-    def __init__(self, filepath: str = "perf_config.json") -> None:
-        self.filepath = filepath
+    def __init__(self, config_path: str = "config.json"):
+        self.config_path = config_path
         self.config = DEFAULT_CONFIG.copy()
-        self.load()
 
-    def load(self) -> None:
-        """Loads configuration from file, falling back to defaults if missing or invalid."""
-        if not os.path.exists(self.filepath):
+    def load(self) -> Dict[str, Any]:
+        """Loads configuration from file and merges it with defaults."""
+        if not os.path.exists(self.config_path):
             self.save()
-            return
+            return self.config
 
         try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
-                loaded_data = json.load(f)
-                if isinstance(loaded_data, dict):
-                    for key, value in loaded_data.items():
-                        if key in self.config:
-                            # Basic type matching validation based on defaults
-                            if isinstance(value, type(self.config[key])):
-                                self.config[key] = value
-        except (json.JSONDecodeError, OSError):
-            self.config = DEFAULT_CONFIG.copy()
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                user_config = json.load(f)
+                for key, value in user_config.items():
+                    if key in DEFAULT_CONFIG:
+                        self.config[key] = value
+        except (json.JSONDecodeError, IOError):
+            # Fail silently to guarantee fallback configuration is used
+            pass
+
+        return self.config
 
     def save(self) -> None:
-        """Saves current configuration state back to the file."""
+        """Saves current configuration back to disk."""
         try:
-            directory = os.path.dirname(os.path.abspath(self.filepath))
-            if directory:
-                os.makedirs(directory, exist_ok=True)
-            with open(self.filepath, "w", encoding="utf-8") as f:
+            with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=4)
-        except OSError:
+        except IOError:
+            # Prevent disk write errors from breaking game lifecycle
             pass
 
     def get(self, key: str) -> Any:
-        """Retrieves a configuration value safely with fallback to hardcoded default."""
+        """Retrieves a configuration value, falling back to default if unavailable."""
         return self.config.get(key, DEFAULT_CONFIG.get(key))
