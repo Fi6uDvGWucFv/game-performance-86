@@ -1,53 +1,56 @@
+"""Configuration management module for game performance tracking."""
+
 import json
-import os
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict
 
-DEFAULT_CONFIG: Dict[str, Any] = {
-    "target_fps": 60,
-    "resolution_scale": 1.0,
-    "enable_vsync": True,
-    "shadow_quality": "medium",
-    "texture_filtering": "anisotropic_4x",
-    "max_dynamic_lights": 16,
-    "physics_ticks_per_second": 50,
-    "log_level": "INFO",
-}
+
+@dataclass
+class PerformanceConfig:
+    """Settings governing game performance profiling and optimization."""
+
+    target_fps: int = 60
+    max_memory_mb: int = 4096
+    enable_dynamic_resolution: bool = True
+    gpu_profiling_level: str = "medium"
+    custom_metrics: Dict[str, bool] = field(
+        default_factory=lambda: {"draw_calls": True, "frame_time": True}
+    )
 
 
-class ConfigLoader:
-    """Loads and manages gaming performance configuration settings with sensible defaults."""
+class ConfigManager:
+    """Manages loading, updating, and saving gaming performance configuration files."""
 
-    def __init__(self, config_path: str = "config.json"):
-        self.config_path = config_path
-        self.config = DEFAULT_CONFIG.copy()
+    def __init__(self, config_path: str = "performance_config.json") -> None:
+        """Initialize ConfigManager with path to settings file."""
+        self.config_path: Path = Path(config_path)
+        self.config: PerformanceConfig = PerformanceConfig()
 
-    def load(self) -> Dict[str, Any]:
-        """Loads configuration from file and merges it with defaults."""
-        if not os.path.exists(self.config_path):
-            self.save()
+    def load_config(self) -> PerformanceConfig:
+        """Load performance settings from disk or return defaults if file missing."""
+        if not self.config_path.exists():
+            self.save_config()
             return self.config
 
         try:
             with open(self.config_path, "r", encoding="utf-8") as f:
-                user_config = json.load(f)
-                for key, value in user_config.items():
-                    if key in DEFAULT_CONFIG:
-                        self.config[key] = value
-        except (json.JSONDecodeError, IOError):
-            # Fail silently to guarantee fallback configuration is used
-            pass
+                data: Dict[str, Any] = json.load(f)
+                self.config = PerformanceConfig(**data)
+        except (json.JSONDecodeError, TypeError):
+            self.config = PerformanceConfig()
 
         return self.config
 
-    def save(self) -> None:
-        """Saves current configuration back to disk."""
-        try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(self.config, f, indent=4)
-        except IOError:
-            # Prevent disk write errors from breaking game lifecycle
-            pass
+    def save_config(self) -> None:
+        """Persist current performance settings to JSON file."""
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(asdict(self.config), f, indent=4)
 
-    def get(self, key: str) -> Any:
-        """Retrieves a configuration value, falling back to default if unavailable."""
-        return self.config.get(key, DEFAULT_CONFIG.get(key))
+    def update_setting(self, key: str, value: Any) -> bool:
+        """Update a specific configuration attribute if valid."""
+        if hasattr(self.config, key):
+            setattr(self.config, key, value)
+            self.save_config()
+            return True
+        return False
