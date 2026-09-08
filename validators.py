@@ -1,27 +1,33 @@
-from functools import lru_cache
-import re
+import logging
 
-# compiled regex patterns for performance
-_ENTITY_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
+logger = logging.getLogger('game-performance-86')
 
-@lru_cache(maxsize=1024)
-def validate_entity_id(entity_id: str) -> bool:
-    """validates entity strings using cached regex results"""
-    if not entity_id or len(entity_id) > 64:
+class ValidationError(Exception):
+    """Custom exception for input validation failures."""
+    pass
+
+def validate_frame_rate(fps: float) -> bool:
+    """Ensures frame rate data is within realistic gaming bounds."""
+    try:
+        if not isinstance(fps, (int, float)):
+            raise TypeError('Frame rate must be numeric')
+        if fps < 0 or fps > 1000:
+            raise ValueError(f'Unrealistic frame rate detected: {fps}')
+        return True
+    except (TypeError, ValueError) as e:
+        logger.error(f'Validation failed for fps {fps}: {e}')
         return False
-    return bool(_ENTITY_ID_PATTERN.match(entity_id))
 
-def batch_validate_ids(id_list: list[str]) -> list[bool]:
-    """bulk processing of id validation for frames"""
-    return [validate_entity_id(uid) for uid in id_list]
-
-class PerformanceValidator:
-    """validator class with precomputed internal constraints"""
-    __slots__ = ('threshold',)
-
-    def __init__(self, threshold: float = 0.95):
-        self.threshold = threshold
-
-    def check_frame_budget(self, frame_time: float) -> bool:
-        """checks if frame performance meets thresholds"""
-        return frame_time <= self.threshold
+def validate_hardware_temp(temp: float) -> bool:
+    """Checks if hardware temperature is within safe operating range."""
+    try:
+        if temp is None:
+            raise ValidationError('Temperature reading is missing')
+        if temp < -273.15:
+            raise ValueError('Temperature below absolute zero')
+        if temp > 150:
+            logger.warning(f'Critical temperature detected: {temp}C')
+        return True
+    except (TypeError, ValueError, ValidationError) as e:
+        logger.exception(f'Hardware monitor error: {e}')
+        return False
