@@ -1,29 +1,59 @@
-from typing import List, Dict, Optional
+import logging
+from typing import Dict, Any, List
 
-def normalize_frame_times(frame_times: List[float], target_fps: int = 60) -> List[float]:
-    """Calculates frame time variance against target performance metrics."""
-    if not frame_times:
-        return []
+logger = logging.getLogger("game_performance")
 
-    target_ms = 1000.0 / target_fps
-    return [max(0.0, ft - target_ms) for ft in frame_times]
+class PerformanceProcessor:
+    """Processes game telemetry data and validates inputs for performance analysis."""
+    
+    def __init__(self, fps_threshold: float = 30.0):
+        self.fps_threshold = fps_threshold
 
-def calculate_hit_rate(hits: int, total_attempts: int) -> float:
-    """Determines precision accuracy percentage for gaming events."""
-    if total_attempts <= 0:
-        return 0.0
-    return (hits / total_attempts) * 100.0
+    def validate_metrics(self, data: Dict[str, Any]) -> bool:
+        """Validates that the incoming telemetry packet has correct types and ranges."""
+        if not isinstance(data, dict):
+            logger.warning("Invalid data format: expected dictionary.")
+            return False
+            
+        required_keys = {"frame_time_ms", "fps", "memory_mb"}
+        if not required_keys.issubset(data.keys()):
+            logger.warning(f"Missing required performance metrics: {required_keys - data.keys()}")
+            return False
 
-def aggregate_telemetry(data: List[Dict[str, float]]) -> Dict[str, float]:
-    """Computes average performance metrics from raw telemetry input."""
-    if not data:
-        return {"avg_fps": 0.0, "avg_latency": 0.0}
+        try:
+            if not (0.0 < float(data["frame_time_ms"]) < 1000.0):
+                logger.warning(f"Out of bounds frame_time_ms: {data['frame_time_ms']}")
+                return False
+            if not (0.0 <= float(data["fps"]) <= 1000.0):
+                logger.warning(f"Unrealistic FPS value: {data['fps']}")
+                return False
+            if not (10.0 <= float(data["memory_mb"]) <= 65536.0):
+                logger.warning(f"Unrealistic memory usage: {data['memory_mb']} MB")
+                return False
+        except (TypeError, ValueError) as err:
+            logger.error(f"Data type validation failed: {err}")
+            return False
 
-    keys = ["fps", "latency"]
-    sums = {k: 0.0 for k in keys}
-    for entry in data:
-        for k in keys:
-            sums[k] += entry.get(k, 0.0)
+        return True
 
-    count = len(data)
-    return {f"avg_{k}": v / count for k, v in sums.items()}
+    def process_telemetry_stream(self, stream: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Processes a batch of game performance telemetry with strict input validation."""
+        processed_count = 0
+        dropped_count = 0
+        total_fps = 0.0
+
+        for record in stream:
+            if not self.validate_metrics(record):
+                dropped_count += 1
+                continue
+
+            total_fps += float(record["fps"])
+            processed_count += 1
+
+        avg_fps = total_fps / processed_count if processed_count > 0 else 0.0
+        return {
+            "processed_records": processed_count,
+            "dropped_records": dropped_count,
+            "average_fps": round(avg_fps, 2),
+            "performance_warning": avg_fps < self.fps_threshold if processed_count > 0 else False
+        }
