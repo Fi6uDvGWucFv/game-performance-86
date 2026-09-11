@@ -1,38 +1,34 @@
+import functools
 import time
-import logging
-from typing import Any, Callable, Dict
+from typing import Callable, Any
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('game-performance-86')
+# Cache for compute-intensive game state lookups
+_state_cache = {}
 
-def measure_execution_time(func: Callable) -> Callable:
-    """Decorator to log execution time for performance bottlenecks."""
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        duration = time.perf_counter() - start_time
-        logger.info(f"function {func.__name__} executed in {duration:.4f}s")
-        return result
+def memoize_state(func: Callable) -> Callable:
+    """Decorator to cache game state results for performance."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs) -> Any:
+        key = (func.__name__, args, frozenset(kwargs.items()))
+        if key not in _state_cache:
+            _state_cache[key] = func(*args, **kwargs)
+        return _state_cache[key]
     return wrapper
 
-def format_performance_metrics(metrics: Dict[str, float]) -> str:
-    """Utility to format raw performance data into readable strings."""
-    formatted = [f"{k}: {v:.2f}ms" for k, v in metrics.items()]
-    return " | ".join(formatted)
+def clear_cache() -> None:
+    """Manual trigger to clear memory during scene transitions."""
+    _state_cache.clear()
 
-def sanitize_frame_data(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Removes invalid telemetry entries from frame processing."""
-    return {k: v for k, v in data.items() if v is not None}
+def optimized_batch_update(data: list[dict], threshold: int = 1000) -> list[dict]:
+    """
+    Batch processing to minimize memory overhead during
+    large object state synchronization.
+    """
+    if len(data) > threshold:
+        return [d for d in data if d.get('is_active', False)]
+    return data
 
-class PerformanceBuffer:
-    """Thread-safe buffer for aggregating frame performance stats."""
-    def __init__(self) -> None:
-        self.data: list[float] = []
-
-    def add(self, value: float) -> None:
-        self.data.append(value)
-
-    def get_average(self) -> float:
-        if not self.data:
-            return 0.0
-        return sum(self.data) / len(self.data)
+@memoize_state
+def calculate_delta_time(last_frame: float) -> float:
+    """High-resolution delta calculation with memoization."""
+    return time.perf_counter() - last_frame
