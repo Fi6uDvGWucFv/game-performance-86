@@ -1,31 +1,23 @@
-import time
-import functools
-import logging
+import json
+from typing import Dict, Any, List
 
-logger = logging.getLogger(__name__)
+def calculate_fps_average(frame_times: List[float]) -> float:
+    """Calculates average frames per second from a list of frame timings."""
+    if not frame_times:
+        return 0.0
+    return 1000.0 / (sum(frame_times) / len(frame_times))
 
-def with_retry(retries=3, delay=2, backoff=2, exceptions=(Exception,)): 
-    """Decorator for retrying network operations with exponential backoff."""
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            current_delay = delay
-            for attempt in range(retries):
-                try:
-                    return func(*args, **kwargs)
-                except exceptions as e:
-                    if attempt == retries - 1:
-                        logger.error(f"Final attempt failed for {func.__name__}: {e}")
-                        raise
-                    
-                    logger.warning(f"Attempt {attempt + 1} failed, retrying in {current_delay}s...")
-                    time.sleep(current_delay)
-                    current_delay *= backoff
-        return wrapper
-    return decorator
+def serialize_game_state(state: Dict[str, Any]) -> str:
+    """Converts dictionary game states to minified JSON strings."""
+    try:
+        return json.dumps(state, separators=(',', ':'))
+    except (TypeError, ValueError) as e:
+        return f'{{"error": "serialization_failed", "details": "{str(e)}"}}'
 
-@with_retry(retries=3, delay=1)
-def fetch_game_data(url):
-    """Example usage for network data fetching."""
-    # Simulating a network request
-    return {"status": "success", "data": "game_metrics"}
+def normalize_input(value: float, min_val: float, max_val: float) -> float:
+    """Clamps input values within game coordinate bounds."""
+    return max(min_val, min(value, max_val))
+
+def format_performance_metric(metric_name: str, value: float) -> str:
+    """Generates formatted string for performance logging dashboards."""
+    return f"{metric_name.upper()}: {value:.2f}"
