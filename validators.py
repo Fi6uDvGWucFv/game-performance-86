@@ -1,41 +1,32 @@
-from typing import Union, Dict, Any
+class InputValidationError(Exception):
+    """Custom exception for game input processing errors."""
+    pass
 
-def validate_frame_data(data: Dict[str, Any]) -> bool:
+def validate_game_input(data: dict) -> bool:
     """
-    Validates game telemetry data packets for frame stability.
-
-    Args:
-        data: A dictionary containing frame performance metrics.
-
-    Returns:
-        True if metrics are within acceptable thresholds, False otherwise.
+    Validates incoming game state payloads for performance metrics.
+    Ensures required fields exist and constraints are met.
     """
-    required_keys = {"fps", "frame_time", "gpu_usage"}
-    if not required_keys.issubset(data.keys()):
-        return False
+    required_fields = ['player_id', 'action_type', 'timestamp', 'latency_ms']
+    
+    # Check for missing keys
+    for field in required_fields:
+        if field not in data:
+            raise InputValidationError(f"Missing required field: {field}")
 
-    return data["fps"] > 0 and data["frame_time"] < 50.0
+    # Validate data types and ranges
+    if not isinstance(data['player_id'], int):
+        raise InputValidationError("player_id must be an integer")
+    
+    if not isinstance(data['latency_ms'], (int, float)) or data['latency_ms'] < 0:
+        raise InputValidationError("latency_ms must be a non-negative number")
 
-def validate_player_latency(latency: Union[int, float]) -> bool:
+    return True
+
+def sanitize_input(data: dict) -> dict:
     """
-    Checks if player ping is suitable for competitive gaming.
-
-    Args:
-        latency: Current network latency in milliseconds.
-
-    Returns:
-        True if latency is below the competitive threshold of 100ms.
+    Sanitizes game input strings to prevent injection or errors.
     """
-    return 0 <= latency < 100
-
-def sanitize_input(value: str) -> str:
-    """
-    Strips potential malicious characters from player chat or input.
-
-    Args:
-        value: Raw input string from the game client.
-
-    Returns:
-        A sanitized string safe for logging or database storage.
-    """
-    return "".join(char for char in value if char.isalnum() or char == " ")
+    if 'action_type' in data:
+        data['action_type'] = str(data['action_type']).strip().lower()[:32]
+    return data
