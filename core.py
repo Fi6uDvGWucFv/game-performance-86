@@ -1,32 +1,43 @@
-import time
-import functools
-import logging
-from typing import Callable, Any
+from typing import Dict, Set, Tuple, Any
 
-logger = logging.getLogger('game-performance-86')
+class SpatialHashGrid:
+    """
+    A 2D spatial hash grid to optimize entity proximity and collision queries.
+    Reduces neighbor lookup complexity from O(N^2) to near O(1) per entity.
+    """
+    def __init__(self, cell_size: int = 64):
+        self.cell_size = cell_size
+        self.grid: Dict[Tuple[int, int], Set[Any]] = {}
 
-def retry_on_failure(max_attempts: int = 3, delay: float = 1.0):
-    """Decorator to retry network operations on exception."""
-    def decorator(func: Callable):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
-            last_exception = None
-            for attempt in range(1, max_attempts + 1):
-                try:
-                    return func(*args, **kwargs)
-                except (ConnectionError, TimeoutError) as e:
-                    last_exception = e
-                    logger.warning(f"Attempt {attempt} failed: {e}")
-                    if attempt < max_attempts:
-                        time.sleep(delay * (2 ** (attempt - 1)))
-            
-            logger.error(f"Final attempt failed after {max_attempts} retries")
-            raise last_exception
-        return wrapper
-    return decorator
+    def _get_cell_coords(self, x: float, y: float) -> Tuple[int, int]:
+        """Maps continuous 2D float coordinates to discrete integer cell coordinates."""
+        return (int(x // self.cell_size), int(y // self.cell_size))
 
-@retry_on_failure(max_attempts=3, delay=0.5)
-def fetch_game_data(url: str):
-    """Mock network call for game performance metrics."""
-    # Simulating actual network call
-    return {"status": "ok", "url": url}
+    def clear(self) -> None:
+        """Resets the spatial partition index."""
+        self.grid.clear()
+
+    def insert(self, entity_id: Any, x: float, y: float) -> None:
+        """Registers an entity into the grid based on its 2D coordinates."""
+        cell = self._get_cell_coords(x, y)
+        if cell not in self.grid:
+            self.grid[cell] = set()
+        self.grid[cell].add(entity_id)
+
+    def query_nearby(self, x: float, y: float, radius: float) -> Set[Any]:
+        """Retrieves all entities stored in cells overlapping the query bounding box."""
+        nearby_entities: Set[Any] = set()
+        
+        # Determine minimum and maximum grid indices overlapping the radius boundary
+        min_cell_x = int((x - radius) // self.cell_size)
+        max_cell_x = int((x + radius) // self.cell_size)
+        min_cell_y = int((y - radius) // self.cell_size)
+        max_cell_y = int((y + radius) // self.cell_size)
+
+        for cx in range(min_cell_x, max_cell_x + 1):
+            for cy in range(min_cell_y, max_cell_y + 1):
+                cell = (cx, cy)
+                if cell in self.grid:
+                    nearby_entities.update(self.grid[cell])
+        
+        return nearby_entities
