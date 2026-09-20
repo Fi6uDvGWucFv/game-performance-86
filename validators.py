@@ -1,32 +1,33 @@
-class InputValidationError(Exception):
-    """Custom exception for game input processing errors."""
-    pass
+from typing import Any, Dict, Optional
 
-def validate_game_input(data: dict) -> bool:
-    """
-    Validates incoming game state payloads for performance metrics.
-    Ensures required fields exist and constraints are met.
-    """
-    required_fields = ['player_id', 'action_type', 'timestamp', 'latency_ms']
-    
-    # Check for missing keys
-    for field in required_fields:
-        if field not in data:
-            raise InputValidationError(f"Missing required field: {field}")
+def validate_game_input(data: Any) -> Optional[Dict[str, Any]]:
+    """Validates input frame metrics for performance tracking."""
+    if not isinstance(data, dict):
+        return None
 
-    # Validate data types and ranges
-    if not isinstance(data['player_id'], int):
-        raise InputValidationError("player_id must be an integer")
-    
-    if not isinstance(data['latency_ms'], (int, float)) or data['latency_ms'] < 0:
-        raise InputValidationError("latency_ms must be a non-negative number")
+    required_fields = ['fps', 'frame_time_ms', 'gpu_load']
+    if not all(k in data for k in required_fields):
+        return None
 
-    return True
+    try:
+        # Ensure numeric values are within reasonable gaming performance bounds
+        validated_data = {
+            'fps': float(data['fps']),
+            'frame_time_ms': float(data['frame_time_ms']),
+            'gpu_load': float(data['gpu_load'])
+        }
 
-def sanitize_input(data: dict) -> dict:
-    """
-    Sanitizes game input strings to prevent injection or errors.
-    """
-    if 'action_type' in data:
-        data['action_type'] = str(data['action_type']).strip().lower()[:32]
-    return data
+        if validated_data['fps'] < 0 or validated_data['gpu_load'] < 0:
+            return None
+
+        return validated_data
+    except (ValueError, TypeError):
+        return None
+
+def sanitize_player_metrics(raw_data: Any) -> Dict[str, Any]:
+    """Sanitizes and filters player input metrics for processing loop."""
+    valid_data = validate_game_input(raw_data)
+    if valid_data is None:
+        return {'status': 'error', 'message': 'invalid metric schema'}
+
+    return {'status': 'success', 'data': valid_data}
