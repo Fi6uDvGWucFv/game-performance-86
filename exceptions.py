@@ -1,25 +1,24 @@
+from typing import Optional
+
 class PerformanceError(Exception):
-    """Base exception for all game performance errors."""
-    pass
-
-class TelemetryDataError(PerformanceError):
-    """Raised when game telemetry data is malformed."""
-    pass
-
-class LatencyThresholdExceeded(PerformanceError):
-    """Raised when network latency exceeds allowed limits."""
-    def __init__(self, latency: float, limit: float):
-        self.latency = latency
-        self.limit = limit
-        super().__init__(f"Latency {latency}ms exceeded threshold of {limit}ms")
+    """Base exception for all performance monitoring issues."""
+    def __init__(self, message: str, code: Optional[int] = None) -> None:
+        super().__init__(message)
+        self.code = code
 
 class FrameRateDropError(PerformanceError):
-    """Raised when FPS falls below critical thresholds."""
-    def __init__(self, fps: float, min_required: float):
-        self.fps = fps
-        self.min_required = min_required
-        super().__init__(f"FPS drop to {fps} detected (min: {min_required})")
-
-class ResourceLimitError(PerformanceError):
-    """Raised when hardware resources are insufficient."""
+    """Raised when the frame rate falls below the threshold."""
     pass
+
+class ResourceLeakError(PerformanceError):
+    """Raised when memory or CPU usage exceeds safe bounds."""
+    pass
+
+class ConfigurationError(PerformanceError):
+    """Raised when the performance profile is invalid."""
+    pass
+
+def format_error(error: PerformanceError) -> str:
+    """Format a PerformanceError for logging purposes."""
+    code_str = f"[{error.code}] " if error.code else ""
+    return f"Performance issue detected: {code_str}{str(error)}"
