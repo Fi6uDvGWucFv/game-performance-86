@@ -1,32 +1,41 @@
-import json
 import os
+import logging
+from typing import Any, Dict
 
-DEFAULT_CONFIG = {
-    "resolution": "1920x1080",
-    "vsync": True,
-    "target_fps": 144,
-    "texture_quality": "high"
-}
+# Configure logging for performance tracking
+logger = logging.getLogger('game-performance-86')
 
-def load_config(filepath="settings.json"):
-    """Loads user configuration or returns defaults."""
-    if not os.path.exists(filepath):
-        return DEFAULT_CONFIG
+class ConfigError(Exception):
+    """Custom exception for configuration failures."""
+    pass
+
+def load_performance_settings(path: str) -> Dict[str, Any]:
+    """Loads and validates configuration from environment or file."""
+    if not path or not os.path.exists(path):
+        logger.error(f"configuration file missing: {path}")
+        raise ConfigError("invalid path provided")
 
     try:
-        with open(filepath, "r") as f:
-            user_config = json.load(f)
-            # Merge user config with defaults
-            config = DEFAULT_CONFIG.copy()
-            config.update(user_config)
-            return config
-    except (json.JSONDecodeError, IOError):
-        return DEFAULT_CONFIG
+        with open(path, 'r') as f:
+            data = f.read()
+            if not data.strip():
+                raise ValueError("empty file content")
+            
+            # Simulate parsing logic
+            import json
+            settings = json.loads(data)
+            
+            # Ensure mandatory keys exist for game engine
+            required = ['refresh_rate', 'texture_quality']
+            for key in required:
+                if key not in settings:
+                    raise KeyError(f"missing required config: {key}")
+            
+            return settings
 
-def save_config(config, filepath="settings.json"):
-    """Persists configuration to disk."""
-    try:
-        with open(filepath, "w") as f:
-            json.dump(config, f, indent=4)
-    except IOError as e:
-        print(f"Failed to save configuration: {e}")
+    except (json.JSONDecodeError, ValueError, KeyError) as e:
+        logger.error(f"config parsing failure: {e}")
+        raise ConfigError(f"configuration load failure: {e}")
+    except Exception as e:
+        logger.critical(f"unexpected system error: {e}")
+        raise ConfigError("unhandled configuration exception")
