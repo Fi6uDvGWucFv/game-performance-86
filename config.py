@@ -1,34 +1,51 @@
 import json
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
-DEFAULT_CONFIG = {
-    "fps_limit": 144,
-    "resolution": [1920, 1080],
-    "vsync": True,
-    "texture_quality": "high"
+DEFAULT_CONFIG: Dict[str, Any] = {
+    "target_fps": 144,
+    "resolution": "1920x1080",
+    "vsync": False,
+    "shadow_quality": "medium",
+    "texture_filtering": "anisotropic_4x",
+    "enable_overlay": True,
+    "telemetry_interval_ms": 500,
+    "max_frame_time_ms": 16.6,
 }
 
-def load_config(file_path: str = "settings.json") -> Dict[str, Any]:
-    """Load configuration from JSON or return defaults if missing."""
-    config = DEFAULT_CONFIG.copy()
-    
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r") as f:
-                user_config = json.load(f)
-                config.update(user_config)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Error reading config: {e}. Using defaults.")
-            
-    return config
 
-def save_config(config: Dict[str, Any], file_path: str = "settings.json") -> bool:
-    """Persist current configuration to disk."""
-    try:
-        with open(file_path, "w") as f:
-            json.dump(config, f, indent=4)
-        return True
-    except IOError as e:
-        print(f"Failed to save config: {e}")
-        return False
+class ConfigLoader:
+    """Loads and manages gaming performance settings with default fallbacks."""
+
+    def __init__(self, config_path: str = "performance_config.json") -> None:
+        self.config_path = config_path
+        self.settings = DEFAULT_CONFIG.copy()
+
+    def load(self) -> Dict[str, Any]:
+        """Load settings from JSON file, merging with default options."""
+        if not os.path.exists(self.config_path):
+            self.save()
+            return self.settings
+
+        try:
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                user_config = json.load(f)
+
+            # Merge user settings into defaults
+            for key, default_val in DEFAULT_CONFIG.items():
+                self.settings[key] = user_config.get(key, default_val)
+
+        except (json.JSONDecodeError, IOError):
+            # Fallback to default configuration on read error
+            self.settings = DEFAULT_CONFIG.copy()
+
+        return self.settings
+
+    def save(self) -> None:
+        """Save current settings to the configuration file."""
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(self.settings, f, indent=4)
+
+    def get(self, key: str, fallback: Any = None) -> Any:
+        """Retrieve a specific configuration parameter."""
+        return self.settings.get(key, fallback)
