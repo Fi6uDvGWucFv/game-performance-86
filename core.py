@@ -1,43 +1,44 @@
-from typing import Dict, Set, Tuple, Any
+import time
+import logging
 
-class SpatialHashGrid:
-    """
-    A 2D spatial hash grid to optimize entity proximity and collision queries.
-    Reduces neighbor lookup complexity from O(N^2) to near O(1) per entity.
-    """
-    def __init__(self, cell_size: int = 64):
-        self.cell_size = cell_size
-        self.grid: Dict[Tuple[int, int], Set[Any]] = {}
+# Configure performance tracking
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('game-performance-86')
 
-    def _get_cell_coords(self, x: float, y: float) -> Tuple[int, int]:
-        """Maps continuous 2D float coordinates to discrete integer cell coordinates."""
-        return (int(x // self.cell_size), int(y // self.cell_size))
+class PerformanceEngine:
+    def __init__(self, frame_limit: int = 60):
+        self.frame_limit = frame_limit
+        self.delta_time = 0.0
+        self._last_tick = time.perf_counter()
 
-    def clear(self) -> None:
-        """Resets the spatial partition index."""
-        self.grid.clear()
+    def update(self) -> float:
+        """Calculates delta time for frame-rate independence."""
+        current_time = time.perf_counter()
+        self.delta_time = current_time - self._last_tick
+        self._last_tick = current_time
+        return self.delta_time
 
-    def insert(self, entity_id: Any, x: float, y: float) -> None:
-        """Registers an entity into the grid based on its 2D coordinates."""
-        cell = self._get_cell_coords(x, y)
-        if cell not in self.grid:
-            self.grid[cell] = set()
-        self.grid[cell].add(entity_id)
+    def get_fps(self) -> float:
+        """Returns current frame rate based on delta time."""
+        return 1.0 / self.delta_time if self.delta_time > 0 else 0.0
 
-    def query_nearby(self, x: float, y: float, radius: float) -> Set[Any]:
-        """Retrieves all entities stored in cells overlapping the query bounding box."""
-        nearby_entities: Set[Any] = set()
-        
-        # Determine minimum and maximum grid indices overlapping the radius boundary
-        min_cell_x = int((x - radius) // self.cell_size)
-        max_cell_x = int((x + radius) // self.cell_size)
-        min_cell_y = int((y - radius) // self.cell_size)
-        max_cell_y = int((y + radius) // self.cell_size)
+def run_performance_loop(engine: PerformanceEngine):
+    """Main game loop execution logic."""
+    try:
+        while True:
+            dt = engine.update()
+            fps = engine.get_fps()
+            
+            if fps < 30:
+                logger.warning(f"Low frame rate detected: {fps:.2f} FPS")
+            
+            # Throttle loop to match target frame limit
+            sleep_time = (1.0 / engine.frame_limit) - dt
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+    except KeyboardInterrupt:
+        logger.info("Performance engine shutdown")
 
-        for cx in range(min_cell_x, max_cell_x + 1):
-            for cy in range(min_cell_y, max_cell_y + 1):
-                cell = (cx, cy)
-                if cell in self.grid:
-                    nearby_entities.update(self.grid[cell])
-        
-        return nearby_entities
+if __name__ == "__main__":
+    engine = PerformanceEngine()
+    run_performance_loop(engine)
