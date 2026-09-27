@@ -1,25 +1,53 @@
+import json
 import os
-from functools import lru_cache
+from typing import Any, Dict
 
-class PerformanceConfig:
-    """Configuration management with caching for game performance"""
-    def __init__(self):
-        self._settings = {
-            "target_fps": int(os.getenv("TARGET_FPS", 144)),
-            "render_scale": float(os.getenv("RENDER_SCALE", 1.0)),
-            "max_draw_calls": int(os.getenv("MAX_DRAW_CALLS", 2000)),
-            "enable_vsync": os.getenv("ENABLE_VSYNC", "true").lower() == "true"
-        }
+DEFAULT_CONFIG: Dict[str, Any] = {
+    "target_fps": 144,
+    "enable_telemetry": True,
+    "sampling_interval_ms": 100,
+    "log_level": "INFO",
+    "process_priority": "HIGH"
+}
 
-    @lru_cache(maxsize=16)
-    def get_setting(self, key: str):
-        """Cached retrieval of performance settings"""
-        return self._settings.get(key)
+class ConfigLoader:
+    """Handles loading, saving, and merging configuration with system defaults."""
 
-    def update_setting(self, key: str, value):
-        """Updates config and invalidates cache"""
-        self._settings[key] = value
-        self.get_setting.cache_clear()
+    def __init__(self, filepath: str = "config.json"):
+        self.filepath = filepath
+        self.config = self._load_config()
 
-# Global config instance
-config = PerformanceConfig()
+    def _load_config(self) -> Dict[str, Any]:
+        if not os.path.exists(self.filepath):
+            self._save_config(DEFAULT_CONFIG)
+            return DEFAULT_CONFIG.copy()
+
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                user_config = json.load(f)
+            
+            # Merge defaults with user settings to handle missing keys gracefully
+            merged = DEFAULT_CONFIG.copy()
+            if isinstance(user_config, dict):
+                merged.update(user_config)
+            return merged
+        except (json.JSONDecodeError, IOError):
+            # Fallback to defaults if file is corrupt or unreadable
+            return DEFAULT_CONFIG.copy()
+
+    def _save_config(self, data: Dict[str, Any]) -> None:
+        try:
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+        except IOError:
+            # Silently fail if unable to write config, preserving runtime execution
+            pass
+
+    def get(self, key: str) -> Any:
+        """Retrieve configuration value with safety fallback to defaults."""
+        return self.config.get(key, DEFAULT_CONFIG.get(key))
+
+    def set(self, key: str, value: Any) -> None:
+        """Update dynamic config setting and persist changes locally."""
+        self.config[key] = value
+        self._save_config(self.config)
