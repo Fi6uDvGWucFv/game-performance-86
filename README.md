@@ -1,55 +1,53 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # game-performance-86
 
-A high-performance Python toolkit designed to analyze and optimize system resource allocation for competitive gaming. This library monitors hardware telemetry in real-time to minimize latency and stabilize frame delivery during intense sessions.
+`game-performance-86` is a lightweight Python telemetry engine designed to capture, analyze, and visualize real-time frame rates and hardware bottlenecks across x86 PC games. It hooks directly into system graphics pipelines and system metrics to generate actionable performance profiles without introducing render overhead.
 
 ## Features
 
-*   **Priority Orchestration:** Automatically elevates process priority for active game executables while background tasks are throttled.
-*   **Telemetry Logging:** Captures high-frequency CPU/GPU temperature and clock speed data to detect thermal throttling events.
-*   **Latency Mitigation:** Applies adaptive kernel-level networking tweaks to reduce packet loss and ping variance.
-*   **Cross-Platform Support:** Built on a lightweight core compatible with Windows and Linux game environments.
+* **Sub-Millisecond Frame Time Tracking:** Measures 1% low and 0.1% low FPS thresholds to identify micro-stutter anomalies during active gameplay.
+* **Hardware Bottleneck Detection:** Synchronizes GPU clock speeds, VRAM allocation, and CPU thread saturation with render times.
+* **Automated Report Generation:** Exports interactive HTML performance graphs and structured CSV logs at the end of each benchmark session.
+* **Minimal System Footprint:** Operates as a background process utilizing under 15MB of RAM and less than 0.5% CPU power.
 
 ## Installation
 
-Ensure you have Python 3.8+ installed. Install the package via pip:
+Ensure you have Python 3.9+ installed on your Windows system before proceeding.
 
 ```bash
-pip install game-performance-86
-```
-
-For telemetry monitoring, ensure you have the necessary system-level permissions:
-
-```bash
-# Clone the repository
 git clone https://github.com/Developer/game-performance-86.git
 cd game-performance-86
 pip install -r requirements.txt
+python setup.py install
 ```
 
-## Usage
+## Basic Usage
 
-Integrate the performance monitor directly into your workflow to detect bottlenecks during gameplay:
+Run the telemetry monitor alongside your target game process:
 
 ```python
-from game_perf import PerformanceMonitor
+from game_performance import TelemetryMonitor
 
-# Initialize the monitor
-monitor = PerformanceMonitor(target_process="valorant.exe")
+# Initialize session for the target game process
+monitor = TelemetryMonitor(process_name="Cyberpunk2077.exe", interval_ms=100)
 
-# Start real-time analysis
-monitor.start_tracking()
+# Start collecting metrics
+monitor.start()
 
-# Retrieve current metrics
-stats = monitor.get_metrics()
-print(f"Current System Latency: {stats['latency']}ms")
+# ... allow game session to run ...
+
+# Stop logging and save final report
+monitor.stop()
+monitor.save_report(output_path="session_analysis.html")
 ```
 
-## Contributing
+For quick CLI benchmarking without writing code:
 
-Contributions are welcome. Please ensure that all performance-related PRs include benchmark data verifying the reduction in frame-time variance.
+```bash
+python -m game_performance --process EldenRing.exe --duration 300 --output report.csv
+```
 
 ## License
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See `LICENSE` for more information.
