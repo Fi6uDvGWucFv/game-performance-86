@@ -1,24 +1,36 @@
-from typing import Optional
+import time
+import functools
+import logging
 
-class PerformanceError(Exception):
-    """Base exception for all performance monitoring issues."""
-    def __init__(self, message: str, code: Optional[int] = None) -> None:
-        super().__init__(message)
-        self.code = code
+logger = logging.getLogger(__name__)
 
-class FrameRateDropError(PerformanceError):
-    """Raised when the frame rate falls below the threshold."""
+class NetworkError(Exception):
+    """Custom exception for network-related failures."""
     pass
 
-class ResourceLeakError(PerformanceError):
-    """Raised when memory or CPU usage exceeds safe bounds."""
-    pass
-
-class ConfigurationError(PerformanceError):
-    """Raised when the performance profile is invalid."""
-    pass
-
-def format_error(error: PerformanceError) -> str:
-    """Format a PerformanceError for logging purposes."""
-    code_str = f"[{error.code}] " if error.code else ""
-    return f"Performance issue detected: {code_str}{str(error)}"
+def retry_operation(retries=3, delay=1.0, backoff=2):
+    """
+    Decorator for retrying network operations with exponential backoff.
+    
+    :param retries: Number of attempts before giving up.
+    :param delay: Initial delay between retries in seconds.
+    :param backoff: Multiplier for the delay after each failure.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            current_delay = delay
+            for i in range(retries):
+                try:
+                    return func(*args, **kwargs)
+                except (ConnectionError, TimeoutError, NetworkError) as e:
+                    if i == retries - 1:
+                        logger.error(f"Final attempt {i+1} failed: {e}")
+                        raise
+                    
+                    logger.warning(f"Attempt {i+1} failed, retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+            return None
+        return wrapper
+    return decorator
