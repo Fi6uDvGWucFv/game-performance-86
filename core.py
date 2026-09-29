@@ -1,44 +1,27 @@
-import time
-import logging
+import math
+from typing import List, Dict, Union
 
-# Configure performance tracking
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('game-performance-86')
+def calculate_fps_percentiles(frame_times: List[float], percentiles: List[float] = [0.01, 0.1, 0.99]) -> Dict[float, float]:
+    """Calculates frame time percentiles for performance monitoring."""
+    if not frame_times:
+        return {p: 0.0 for p in percentiles}
 
-class PerformanceEngine:
-    def __init__(self, frame_limit: int = 60):
-        self.frame_limit = frame_limit
-        self.delta_time = 0.0
-        self._last_tick = time.perf_counter()
+    sorted_times = sorted(frame_times)
+    results = {}
+    
+    for p in percentiles:
+        index = math.ceil(p * len(sorted_times)) - 1
+        index = max(0, min(index, len(sorted_times) - 1))
+        results[p] = sorted_times[index]
+        
+    return results
 
-    def update(self) -> float:
-        """Calculates delta time for frame-rate independence."""
-        current_time = time.perf_counter()
-        self.delta_time = current_time - self._last_tick
-        self._last_tick = current_time
-        return self.delta_time
+def normalize_telemetry_data(data: Dict[str, Union[int, float]], target_range: float = 1.0) -> Dict[str, float]:
+    """Scales raw performance metrics to a normalized floating point range."""
+    max_val = max(data.values()) if data else 1.0
+    return {k: (v / max_val) * target_range for k, v in data.items()}
 
-    def get_fps(self) -> float:
-        """Returns current frame rate based on delta time."""
-        return 1.0 / self.delta_time if self.delta_time > 0 else 0.0
-
-def run_performance_loop(engine: PerformanceEngine):
-    """Main game loop execution logic."""
-    try:
-        while True:
-            dt = engine.update()
-            fps = engine.get_fps()
-            
-            if fps < 30:
-                logger.warning(f"Low frame rate detected: {fps:.2f} FPS")
-            
-            # Throttle loop to match target frame limit
-            sleep_time = (1.0 / engine.frame_limit) - dt
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-    except KeyboardInterrupt:
-        logger.info("Performance engine shutdown")
-
-if __name__ == "__main__":
-    engine = PerformanceEngine()
-    run_performance_loop(engine)
+def validate_frame_budget(frame_time_ms: float, refresh_rate_hz: int = 60) -> bool:
+    """Checks if frame time stays within display refresh budget."""
+    budget_ms = 1000 / refresh_rate_hz
+    return frame_time_ms <= budget_ms
