@@ -1,31 +1,27 @@
-def validate_input(data: dict) -> bool:
-    """Checks if input data conforms to expected game schemas."""
-    required_keys = {"player_id", "action", "timestamp"}
-    if not isinstance(data, dict):
-        return False
-    if not required_keys.issubset(data.keys()):
-        return False
-    if not isinstance(data.get("player_id"), int):
-        return False
-    return True
+from typing import List, Dict, Union, Optional
 
-def process_game_frame(frame_data: dict):
-    """Main processing logic with validation."""
-    if not validate_input(frame_data):
-        print(f"Invalid frame data received: {frame_data}")
-        return None
+def calculate_frame_time_stats(frame_times: List[float]) -> Dict[str, float]:
+    """Calculates average and peak frame times for performance monitoring."""
+    if not frame_times:
+        return {"avg": 0.0, "peak": 0.0}
     
-    # Process valid game state update
-    player_id = frame_data["player_id"]
-    action = frame_data["action"]
-    print(f"Processing {action} for player {player_id}")
-    return {"status": "success", "player": player_id}
+    avg_time: float = sum(frame_times) / len(frame_times)
+    peak_time: float = max(frame_times)
+    return {"avg": avg_time, "peak": peak_time}
 
-if __name__ == "__main__":
-    # Sample frame loop simulation
-    samples = [
-        {"player_id": 101, "action": "move", "timestamp": 1625097600},
-        {"invalid": "data"}
-    ]
-    for s in samples:
-        process_game_frame(s)
+def format_memory_usage(bytes_count: int) -> str:
+    """Converts raw byte count into a human-readable megabyte string."""
+    mb_value: float = bytes_count / (1024 * 1024)
+    return f"{mb_value:.2f} MB"
+
+def get_gpu_load_status(load_percentage: float) -> str:
+    """Categorizes GPU load intensity for diagnostic output."""
+    if load_percentage > 90.0:
+        return "critical"
+    elif load_percentage > 70.0:
+        return "high"
+    return "stable"
+
+def filter_active_tasks(tasks: List[Dict[str, Union[str, bool]]]) -> List[Dict[str, Union[str, bool]]]:
+    """Filters list of game tasks to return only those currently running."""
+    return [task for task in tasks if task.get("is_active", False)]
