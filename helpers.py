@@ -1,27 +1,40 @@
-from typing import List, Dict, Union, Optional
+import logging
+from typing import Any, Optional
 
-def calculate_frame_time_stats(frame_times: List[float]) -> Dict[str, float]:
-    """Calculates average and peak frame times for performance monitoring."""
-    if not frame_times:
-        return {"avg": 0.0, "peak": 0.0}
+logger = logging.getLogger(__name__)
+
+def safe_frame_rate_calculate(total_frames: int, elapsed_time: float) -> float:
+    """Calculates average frame rate with division by zero protection."""
+    if elapsed_time <= 0:
+        logger.warning('Invalid elapsed time encountered, returning 0.0 fps')
+        return 0.0
     
-    avg_time: float = sum(frame_times) / len(frame_times)
-    peak_time: float = max(frame_times)
-    return {"avg": avg_time, "peak": peak_time}
+    try:
+        return float(total_frames / elapsed_time)
+    except (TypeError, ValueError) as e:
+        logger.error(f'Calculation error: {e}')
+        return 0.0
 
-def format_memory_usage(bytes_count: int) -> str:
-    """Converts raw byte count into a human-readable megabyte string."""
-    mb_value: float = bytes_count / (1024 * 1024)
-    return f"{mb_value:.2f} MB"
+def parse_config_value(value: Any, default: Any) -> Any:
+    """Safely parses config inputs with type fallback."""
+    if value is None:
+        return default
+    
+    try:
+        # Ensure we are working with expected types for game settings
+        if isinstance(default, bool) and not isinstance(value, bool):
+            return str(value).lower() in ('true', '1', 'yes')
+        return type(default)(value)
+    except (ValueError, TypeError) as e:
+        logger.warning(f'Falling back to default due to parse error: {e}')
+        return default
 
-def get_gpu_load_status(load_percentage: float) -> str:
-    """Categorizes GPU load intensity for diagnostic output."""
-    if load_percentage > 90.0:
-        return "critical"
-    elif load_percentage > 70.0:
-        return "high"
-    return "stable"
-
-def filter_active_tasks(tasks: List[Dict[str, Union[str, bool]]]) -> List[Dict[str, Union[str, bool]]]:
-    """Filters list of game tasks to return only those currently running."""
-    return [task for task in tasks if task.get("is_active", False)]
+def get_resource_path(resource_id: Optional[str]) -> str:
+    """Validates resource path strings for engine loading."""
+    if not resource_id or not isinstance(resource_id, str):
+        logger.error('Invalid resource identifier provided')
+        return 'assets/default.png'
+    
+    # Sanitize path to prevent directory traversal
+    safe_id = resource_id.replace('..', '').lstrip('/')
+    return f'assets/{safe_id}'
