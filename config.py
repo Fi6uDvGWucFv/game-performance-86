@@ -2,52 +2,31 @@ import json
 import os
 from typing import Any, Dict
 
-DEFAULT_CONFIG: Dict[str, Any] = {
-    "target_fps": 144,
-    "enable_telemetry": True,
-    "sampling_interval_ms": 100,
-    "log_level": "INFO",
-    "process_priority": "HIGH"
+DEFAULT_CONFIG = {
+    "fps_limit": 60,
+    "vsync": True,
+    "resolution": [1920, 1080],
+    "enable_debug": False
 }
 
-class ConfigLoader:
-    """Handles loading, saving, and merging configuration with system defaults."""
-
-    def __init__(self, filepath: str = "config.json"):
-        self.filepath = filepath
-        self.config = self._load_config()
-
-    def _load_config(self) -> Dict[str, Any]:
-        if not os.path.exists(self.filepath):
-            self._save_config(DEFAULT_CONFIG)
-            return DEFAULT_CONFIG.copy()
-
+def load_config(filepath: str = "settings.json") -> Dict[str, Any]:
+    """Loads configuration from disk with fallback to defaults."""
+    config = DEFAULT_CONFIG.copy()
+    
+    if os.path.exists(filepath):
         try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
+            with open(filepath, "r") as f:
                 user_config = json.load(f)
+                config.update(user_config)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Warning: Failed to load config, using defaults: {e}")
             
-            # Merge defaults with user settings to handle missing keys gracefully
-            merged = DEFAULT_CONFIG.copy()
-            if isinstance(user_config, dict):
-                merged.update(user_config)
-            return merged
-        except (json.JSONDecodeError, IOError):
-            # Fallback to defaults if file is corrupt or unreadable
-            return DEFAULT_CONFIG.copy()
+    return config
 
-    def _save_config(self, data: Dict[str, Any]) -> None:
-        try:
-            with open(self.filepath, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-        except IOError:
-            # Silently fail if unable to write config, preserving runtime execution
-            pass
-
-    def get(self, key: str) -> Any:
-        """Retrieve configuration value with safety fallback to defaults."""
-        return self.config.get(key, DEFAULT_CONFIG.get(key))
-
-    def set(self, key: str, value: Any) -> None:
-        """Update dynamic config setting and persist changes locally."""
-        self.config[key] = value
-        self._save_config(self.config)
+def save_config(config: Dict[str, Any], filepath: str = "settings.json") -> None:
+    """Persists current configuration state to disk."""
+    try:
+        with open(filepath, "w") as f:
+            json.dump(config, f, indent=4)
+    except IOError as e:
+        print(f"Error: Could not save configuration: {e}")
