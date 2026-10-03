@@ -1,60 +1,38 @@
-import math
-from typing import Dict, List, Any, Optional
+import logging
 
-class PerformanceProcessor:
-    """Processes gaming telemetry data with strict input validation."""
+# Configure logger for performance metrics
+logger = logging.getLogger('game-performance-86')
 
-    def __init__(self, target_fps: int = 60):
-        self.target_fps = target_fps
-        self.valid_records: List[Dict[str, Any]] = []
+def validate_input(data):
+    """Ensures incoming game telemetry is within valid ranges."""
+    if not isinstance(data, dict):
+        return False
+    if 'frame_time' not in data or not (0 < data['frame_time'] < 1000):
+        return False
+    if 'gpu_temp' not in data or not (0 < data['gpu_temp'] < 120):
+        return False
+    return True
 
-    def validate_payload(self, payload: Any) -> Optional[str]:
-        """Validates a single telemetry payload. Returns None if valid, or an error message."""
-        if not isinstance(payload, dict):
-            return "Payload must be a dictionary"
-
-        required_keys = {"fps", "frame_time_ms", "gpu_utilization"}
-        if not required_keys.issubset(payload.keys()):
-            missing = required_keys - payload.keys()
-            return f"Missing required keys: {missing}"
-
-        fps = payload.get("fps")
-        frame_time = payload.get("frame_time_ms")
-        gpu_util = payload.get("gpu_utilization")
-
-        if not isinstance(fps, (int, float)) or fps <= 0 or math.isnan(fps):
-            return f"Invalid FPS value: {fps}"
-
-        if not isinstance(frame_time, (int, float)) or frame_time <= 0 or math.isnan(frame_time):
-            return f"Invalid frame time value: {frame_time}"
-
-        if not isinstance(gpu_util, (int, float)) or not (0 <= gpu_util <= 100) or math.isnan(gpu_util):
-            return f"Invalid GPU utilization: {gpu_util}"
-
-        return None
-
-    def process_telemetry_batch(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Processes a batch of game telemetry after validating each entry."""
-        self.valid_records.clear()
-        invalid_count = 0
-
-        for record in batch:
-            error = self.validate_payload(record)
-            if error:
-                # Skip record and record the telemetry validation failure
-                invalid_count += 1
+def process_telemetry(stream):
+    """Main loop for processing real-time game performance data."""
+    for packet in stream:
+        try:
+            if not validate_input(packet):
+                logger.warning(f"Invalid packet dropped: {packet}")
                 continue
-            self.valid_records.append(record)
+            
+            # Simulate core performance logic
+            fps = 1000 / packet['frame_time']
+            logger.info(f"Processed performance: {fps:.2f} FPS")
+            
+        except Exception as e:
+            logger.error(f"Processing error: {str(e)}")
 
-        if not self.valid_records:
-            return {"status": "error", "processed": 0, "invalid": invalid_count, "avg_fps": 0.0}
-
-        total_fps = sum(r["fps"] for r in self.valid_records)
-        avg_fps = total_fps / len(self.valid_records)
-
-        return {
-            "status": "success",
-            "processed": len(self.valid_records),
-            "invalid": invalid_count,
-            "avg_fps": round(avg_fps, 2)
-        }
+if __name__ == '__main__':
+    # Example usage for performance testing
+    test_stream = [
+        {'frame_time': 16.6, 'gpu_temp': 65},
+        {'frame_time': -5, 'gpu_temp': 50},
+        {'frame_time': 33.3, 'gpu_temp': 70}
+    ]
+    process_telemetry(test_stream)
