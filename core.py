@@ -1,27 +1,36 @@
-import math
-from typing import List, Dict, Union
+from typing import List, Dict, Optional
+import time
 
-def calculate_fps_percentiles(frame_times: List[float], percentiles: List[float] = [0.01, 0.1, 0.99]) -> Dict[float, float]:
-    """Calculates frame time percentiles for performance monitoring."""
-    if not frame_times:
-        return {p: 0.0 for p in percentiles}
+class FrameTracker:
+    """Tracks frame rendering performance metrics."""
 
-    sorted_times = sorted(frame_times)
-    results = {}
-    
-    for p in percentiles:
-        index = math.ceil(p * len(sorted_times)) - 1
-        index = max(0, min(index, len(sorted_times) - 1))
-        results[p] = sorted_times[index]
-        
-    return results
+    def __init__(self, target_fps: int = 60) -> None:
+        self.target_fps: int = target_fps
+        self.frame_times: List[float] = []
 
-def normalize_telemetry_data(data: Dict[str, Union[int, float]], target_range: float = 1.0) -> Dict[str, float]:
-    """Scales raw performance metrics to a normalized floating point range."""
-    max_val = max(data.values()) if data else 1.0
-    return {k: (v / max_val) * target_range for k, v in data.items()}
+    def record_frame(self, duration: float) -> None:
+        """Stores a frame duration in milliseconds."""
+        self.frame_times.append(duration)
+        if len(self.frame_times) > 1000:
+            self.frame_times.pop(0)
 
-def validate_frame_budget(frame_time_ms: float, refresh_rate_hz: int = 60) -> bool:
-    """Checks if frame time stays within display refresh budget."""
-    budget_ms = 1000 / refresh_rate_hz
-    return frame_time_ms <= budget_ms
+    def get_average_fps(self) -> float:
+        """Calculates average FPS over tracked samples."""
+        if not self.frame_times:
+            return 0.0
+        avg_ms: float = sum(self.frame_times) / len(self.frame_times)
+        return 1000.0 / avg_ms if avg_ms > 0 else 0.0
+
+class PerformanceOptimizer:
+    """Handles dynamic adjustment of graphical settings."""
+
+    def __init__(self, thresholds: Dict[str, float]) -> None:
+        self.thresholds: Dict[str, float] = thresholds
+
+    def check_stability(self, current_fps: float) -> str:
+        """Determines if current performance meets targets."""
+        if current_fps < self.thresholds.get("min_fps", 30.0):
+            return "LOWER_QUALITY"
+        elif current_fps > self.thresholds.get("max_fps", 120.0):
+            return "RAISE_QUALITY"
+        return "OPTIMAL"
