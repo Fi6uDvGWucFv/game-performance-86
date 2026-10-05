@@ -1,38 +1,36 @@
 import logging
 
-# Configure logger for performance metrics
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('game-performance-86')
-
-def validate_frame_data(data: dict) -> bool:
-    """Ensures frame input meets schema requirements."""
-    required = {'frame_id', 'latency_ms', 'fps'}
+def validate_input(data):
+    """Ensures game input payload is valid."""
+    required = {'player_id', 'action_type', 'timestamp'}
+    if not isinstance(data, dict):
+        return False
     if not all(key in data for key in required):
         return False
-    if not isinstance(data['latency_ms'], (int, float)) or data['latency_ms'] < 0:
+    if not isinstance(data['player_id'], int) or data['player_id'] < 0:
         return False
     return True
 
-def process_input_stream(stream):
-    """Main processing loop with input sanitization."""
-    for entry in stream:
-        try:
-            if not validate_frame_data(entry):
-                logger.warning(f"Invalid frame data dropped: {entry.get('frame_id', 'unknown')}")
-                continue
-            
-            # Simulate processing of valid game performance data
-            fps = entry['fps']
-            latency = entry['latency_ms']
-            logger.info(f"Processing frame {entry['frame_id']}: {fps} FPS, {latency}ms")
-            
-        except Exception as e:
-            logger.error(f"Critical processing failure: {e}")
+def main_processing_loop(event_queue):
+    """Main loop to process incoming game events."""
+    logging.basicConfig(level=logging.INFO)
+    
+    while True:
+        event = event_queue.get()
+        if event is None:
+            break
 
-if __name__ == '__main__':
-    mock_stream = [
-        {'frame_id': 1, 'latency_ms': 16.5, 'fps': 60},
-        {'frame_id': 2, 'latency_ms': -5, 'fps': 60},
-        {'frame_id': 3, 'latency_ms': 12.0, 'fps': 144}
-    ]
-    process_input_stream(mock_stream)
+        # validation step before processing
+        if not validate_input(event):
+            logging.warning(f"Discarding invalid input: {event}")
+            continue
+            
+        try:
+            process_event(event)
+        except Exception as e:
+            logging.error(f"Processing error: {e}")
+
+def process_event(event):
+    """Business logic for individual game events."""
+    # Placeholder for game logic processing
+    print(f"Processing event for player {event['player_id']}")
