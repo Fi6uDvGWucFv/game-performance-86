@@ -1,56 +1,26 @@
-from typing import Dict, Any, Tuple, List, Optional
+import re
+from typing import Any, Optional
 
-class ValidationError(ValueError):
-    """Custom exception raised when telemetry data fails validation."""
-    pass
+# regex patterns for game asset identification
+ASSET_ID_PATTERN = re.compile(r'^[a-z0-9_-]{8,32}$')
 
-def validate_game_metrics(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
-    """
-    Validates the incoming game performance metrics payload.
-    
-    Args:
-        data: A dictionary containing metrics like 'fps', 'frame_time_ms', and 'memory_mb'.
-        
-    Returns:
-        A tuple of (is_valid, error_message).
-    """
-    required_fields = {"fps", "frame_time_ms", "memory_mb"}
-    
-    # Check for missing fields
-    missing_fields = required_fields - data.keys()
-    if missing_fields:
-        return False, f"Missing required fields: {', '.join(missing_fields)}"
-    
-    # Validate FPS (Frames Per Second)
-    fps = data.get("fps")
-    if not isinstance(fps, (int, float)):
-        return False, "FPS must be a numeric value"
-    if fps <= 0 or fps > 1000:
-        return False, f"FPS value {fps} is out of realistic bounds (1-1000)"
-    
-    # Validate Frame Time in milliseconds
-    frame_time = data.get("frame_time_ms")
-    if not isinstance(frame_time, (int, float)):
-        return False, "Frame time must be a numeric value"
-    if frame_time <= 0 or frame_time > 1000:
-        return False, f"Frame time {frame_time}ms is out of realistic bounds (0.1-1000)"
-    
-    # Validate Memory Usage in Megabytes
-    memory = data.get("memory_mb")
-    if not isinstance(memory, (int, float)):
-        return False, "Memory usage must be a numeric value"
-    if memory <= 0 or memory > 131072:  # Up to 128 GB
-        return False, f"Memory usage {memory}MB is out of realistic bounds"
-    
-    return True, None
+def validate_asset_id(asset_id: Any) -> bool:
+    """verify asset identifiers conform to performance standards."""
+    if not isinstance(asset_id, str):
+        return False
+    return bool(ASSET_ID_PATTERN.match(asset_id))
 
-def filter_invalid_telemetry(batch: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Filters out invalid telemetry payloads in the primary processing loop.
-    """
-    validated_batch = []
-    for record in batch:
-        is_valid, _ = validate_game_metrics(record)
-        if is_valid:
-            validated_batch.append(record)
-    return validated_batch
+def sanitize_performance_metric(value: float, min_val: float = 0.0, max_val: float = 144.0) -> float:
+    """clamp metric values to valid frame rate ranges."""
+    return max(min_val, min(float(value), max_val))
+
+def validate_config_schema(data: dict) -> bool:
+    """ensure essential game settings are present."""
+    required_keys = {'fps_target', 'render_scale', 'vsync'}
+    return all(key in data for key in required_keys)
+
+def get_validated_input(value: Any, default: Any) -> Any:
+    """return input if valid else default fallback."""
+    if value is not None:
+        return value
+    return default
