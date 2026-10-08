@@ -1,40 +1,44 @@
-import logging
-from typing import Any, Optional
+import math
+from typing import List
 
-logger = logging.getLogger(__name__)
-
-def safe_frame_rate_calculate(total_frames: int, elapsed_time: float) -> float:
-    """Calculates average frame rate with division by zero protection."""
-    if elapsed_time <= 0:
-        logger.warning('Invalid elapsed time encountered, returning 0.0 fps')
+def calculate_fps(frame_times_ms: List[float]) -> float:
+    """
+    Calculate average Frames Per Second (FPS) from a list of frame times in milliseconds.
+    """
+    if not frame_times_ms:
         return 0.0
-    
-    try:
-        return float(total_frames / elapsed_time)
-    except (TypeError, ValueError) as e:
-        logger.error(f'Calculation error: {e}')
+    total_time_seconds = sum(frame_times_ms) / 1000.0
+    if total_time_seconds <= 0:
+        return 0.0
+    return len(frame_times_ms) / total_time_seconds
+
+def calculate_percentile_fps(frame_times_ms: List[float], percentile: float) -> float:
+    """
+    Calculate the FPS equivalent for a specific percentile of frame times.
+    Useful for computing 1% lows (99th percentile) and 0.1% lows (99.9th percentile).
+    """
+    if not frame_times_ms:
         return 0.0
 
-def parse_config_value(value: Any, default: Any) -> Any:
-    """Safely parses config inputs with type fallback."""
-    if value is None:
-        return default
+    sorted_times = sorted(frame_times_ms)
+    index = math.ceil((percentile / 100.0) * len(sorted_times)) - 1
+    index = max(0, min(index, len(sorted_times) - 1))
     
-    try:
-        # Ensure we are working with expected types for game settings
-        if isinstance(default, bool) and not isinstance(value, bool):
-            return str(value).lower() in ('true', '1', 'yes')
-        return type(default)(value)
-    except (ValueError, TypeError) as e:
-        logger.warning(f'Falling back to default due to parse error: {e}')
-        return default
+    target_frame_time_ms = sorted_times[index]
+    if target_frame_time_ms <= 0:
+        return 0.0
+    return 1000.0 / target_frame_time_ms
 
-def get_resource_path(resource_id: Optional[str]) -> str:
-    """Validates resource path strings for engine loading."""
-    if not resource_id or not isinstance(resource_id, str):
-        logger.error('Invalid resource identifier provided')
-        return 'assets/default.png'
-    
-    # Sanitize path to prevent directory traversal
-    safe_id = resource_id.replace('..', '').lstrip('/')
-    return f'assets/{safe_id}'
+def calculate_stutter_index(frame_times_ms: List[float]) -> float:
+    """
+    Calculate the stutter index as the average absolute difference between consecutive 
+    frame times in milliseconds. Lower values represent smoother gameplay.
+    """
+    if len(frame_times_ms) < 2:
+        return 0.0
+
+    differences = [
+        abs(frame_times_ms[i] - frame_times_ms[i - 1])
+        for i in range(1, len(frame_times_ms))
+    ]
+    return sum(differences) / len(differences)
