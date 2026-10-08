@@ -2,38 +2,34 @@ import time
 import functools
 import logging
 
-# Configure logging for performance tracking
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('game-performance')
+logger = logging.getLogger(__name__)
 
-def measure_execution_time(func):
-    """Decorator to log the execution time of a function."""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        logger.info(f"{func.__name__} executed in {end_time - start_time:.4f} seconds")
-        return result
-    return wrapper
-
-def clamp(value, min_val, max_val):
-    """Restrict a value between min and max bounds."""
-    return max(min_val, min(value, max_val))
-
-def format_memory(bytes_size):
-    """Convert bytes to human-readable megabytes."""
-    return f"{bytes_size / (1024 * 1024):.2f} MB"
-
-def throttle(interval):
-    """Simple throttle for frequent game loop calls."""
-    last_called = [0.0]
+def retry_network_op(retries=3, delay=2, backoff=2):
+    """Decorator for retrying network operations with exponential backoff."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            now = time.perf_counter()
-            if now - last_called[0] >= interval:
-                last_called[0] = now
-                return func(*args, **kwargs)
+            current_delay = delay
+            for attempt in range(retries):
+                try:
+                    return func(*args, **kwargs)
+                except (ConnectionError, TimeoutError) as e:
+                    if attempt == retries - 1:
+                        logger.error(f"Failed after {retries} attempts: {e}")
+                        raise
+                    
+                    logger.warning(f"Retry {attempt + 1}/{retries} after {current_delay}s delay")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
         return wrapper
     return decorator
+
+# Example usage for network-dependent game services
+@retry_network_op(retries=3, delay=1)
+def fetch_leaderboard_data(endpoint):
+    """Placeholder for actual network call logic."""
+    # Simulating transient network failure
+    import random
+    if random.random() < 0.5:
+        raise ConnectionError("Server unreachable")
+    return {"status": "success", "data": []}
