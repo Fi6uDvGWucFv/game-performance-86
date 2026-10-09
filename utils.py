@@ -1,35 +1,46 @@
 import time
-import functools
+import random
 import logging
+from functools import wraps
+from typing import Callable, Any, Type, Tuple
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("game_performance.utils")
 
-def retry_network_op(retries=3, delay=2, backoff=2):
-    """Decorator for retrying network operations with exponential backoff."""
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            current_delay = delay
-            for attempt in range(retries):
+def retry_network_op(
+    max_retries: int = 3,
+    initial_backoff: float = 0.5,
+    backoff_factor: float = 2.0,
+    jitter: bool = True,
+    exceptions: Tuple[Type[BaseException], ...] = (ConnectionError, TimeoutError)
+) -> Callable:
+    """
+    Decorator to retry network-sensitive operations (such as telemetry submissions
+    and matchmaking pings) using exponential backoff and jitter.
+    """
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            delay = initial_backoff
+            for attempt in range(1, max_retries + 1):
                 try:
                     return func(*args, **kwargs)
-                except (ConnectionError, TimeoutError) as e:
-                    if attempt == retries - 1:
-                        logger.error(f"Failed after {retries} attempts: {e}")
-                        raise
-                    
-                    logger.warning(f"Retry {attempt + 1}/{retries} after {current_delay}s delay")
+                except exceptions as e:
+                    if attempt == max_retries:
+                        logger.error(
+                            f"Failed network operation '{func.__name__}' "
+                            f"after {max_retries} attempts: {e}"
+                        )
+                        raise e
+
+                    current_delay = delay
+                    if jitter:
+                        current_delay = random.uniform(delay * 0.5, delay * 1.5)
+
+                    logger.warning(
+                        f"Network operation '{func.__name__}' failed ({e}). "
+                        f"Retrying in {current_delay:.2f}s (Attempt {attempt}/{max_retries})..."
+                    )
                     time.sleep(current_delay)
-                    current_delay *= backoff
+                    delay *= backoff_factor
         return wrapper
     return decorator
-
-# Example usage for network-dependent game services
-@retry_network_op(retries=3, delay=1)
-def fetch_leaderboard_data(endpoint):
-    """Placeholder for actual network call logic."""
-    # Simulating transient network failure
-    import random
-    if random.random() < 0.5:
-        raise ConnectionError("Server unreachable")
-    return {"status": "success", "data": []}
