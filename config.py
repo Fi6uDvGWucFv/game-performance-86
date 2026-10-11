@@ -6,27 +6,31 @@ DEFAULT_CONFIG = {
     "fps_limit": 60,
     "vsync": True,
     "resolution": [1920, 1080],
-    "enable_debug": False
+    "fullscreen": False,
+    "audio_volume": 0.8
 }
 
-def load_config(filepath: str = "settings.json") -> Dict[str, Any]:
-    """Loads configuration from disk with fallback to defaults."""
-    config = DEFAULT_CONFIG.copy()
-    
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r") as f:
-                user_config = json.load(f)
-                config.update(user_config)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Warning: Failed to load config, using defaults: {e}")
-            
-    return config
+class ConfigLoader:
+    def __init__(self, filepath: str = "settings.json"):
+        self.filepath = filepath
+        self.config = DEFAULT_CONFIG.copy()
 
-def save_config(config: Dict[str, Any], filepath: str = "settings.json") -> None:
-    """Persists current configuration state to disk."""
-    try:
-        with open(filepath, "w") as f:
-            json.dump(config, f, indent=4)
-    except IOError as e:
-        print(f"Error: Could not save configuration: {e}")
+    def load(self) -> Dict[str, Any]:
+        if os.path.exists(self.filepath):
+            try:
+                with open(self.filepath, 'r') as f:
+                    user_data = json.load(f)
+                    self.config.update(user_data)
+            except (json.JSONDecodeError, IOError):
+                # fallback to defaults if file is corrupt or unreadable
+                pass
+        return self.config
+
+    def save(self, new_config: Dict[str, Any]) -> None:
+        self.config.update(new_config)
+        with open(self.filepath, 'w') as f:
+            json.dump(self.config, f, indent=4)
+
+# global accessor for convenience
+loader = ConfigLoader()
+config = loader.load()
