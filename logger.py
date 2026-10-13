@@ -1,51 +1,33 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
+import os
 
-LOG_DIR = Path("logs")
-DEFAULT_LOG_FILE = LOG_DIR / "game_performance.log"
-
-def setup_logger(
-    name: str = "game_perf",
-    log_file: Path | str = DEFAULT_LOG_FILE,
-    max_bytes: int = 5 * 1024 * 1024,
-    backup_count: int = 3,
-    level: int = logging.INFO
-) -> logging.Logger:
-    """Configures and returns a logger with rotating file and console output."""
-    log_path = Path(log_file)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-
+def setup_logger(name='game_performance', log_file='game.log', level=logging.INFO):
+    """Initializes a rotating file logger for performance tracking."""
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    if logger.handlers:
-        return logger
+    # Prevent duplicate handlers if function is called multiple times
+    if not logger.handlers:
+        # Ensure log directory exists
+        log_dir = os.path.dirname(log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
 
-    formatter = logging.Formatter(
-        fmt="[%(asctime)s] [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
+        # 5MB per file, keep 3 backups
+        handler = RotatingFileHandler(
+            log_file, maxBytes=5 * 1024 * 1024, backupCount=3
+        )
+        
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
-    # Rotating file handler to manage log size for long gaming sessions
-    file_handler = RotatingFileHandler(
-        log_path,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding="utf-8"
-    )
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(level)
-
-    # Console handler for real-time overlay or terminal output
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.WARNING)
-
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+        # Add console output for development
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
 
     return logger
-
-# Default instance for quick access across modules
-perf_logger = setup_logger()
