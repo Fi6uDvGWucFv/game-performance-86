@@ -1,33 +1,34 @@
 import time
 import functools
-import logging
+from typing import Callable, Any
 
-logger = logging.getLogger(__name__)
+def format_frame_time(ms: float) -> str:
+    """Converts milliseconds to a readable string with unit."""
+    return f"{ms:.2f}ms"
 
-def retry_network_op(retries=3, delay=1.0, backoff=2.0):
-    """Decorator for retrying network operations with exponential backoff."""
-    def decorator(func):
+def throttle(interval: float):
+    """Decorator to limit function call frequency in ms."""
+    def decorator(func: Callable):
+        last_called = [0.0]
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            current_delay = delay
-            for attempt in range(retries):
-                try:
-                    return func(*args, **kwargs)
-                except (ConnectionError, TimeoutError) as e:
-                    if attempt == retries - 1:
-                        logger.error(f"Final attempt failed: {e}")
-                        raise
-                    
-                    logger.warning(f"Attempt {attempt + 1} failed, retrying in {current_delay}s...")
-                    time.sleep(current_delay)
-                    current_delay *= backoff
-            return None
+        def wrapper(*args, **kwargs) -> Any:
+            now = time.perf_counter()
+            if now - last_called[0] >= (interval / 1000.0):
+                last_called[0] = now
+                return func(*args, **kwargs)
         return wrapper
     return decorator
 
-@retry_network_op(retries=3, delay=2.0)
-def fetch_game_data(endpoint):
-    """Simulates a network request with retry logic."""
-    # Implementation would typically use requests or aiohttp
-    print(f"Fetching data from {endpoint}...")
-    return {"status": "success"}
+def clamp(value: float, min_val: float, max_val: float) -> float:
+    """Ensures value stays within inclusive range."""
+    return max(min_val, min(value, max_val))
+
+def calculate_fps(delta_time: float) -> float:
+    """Calculates frames per second from frame delta."""
+    if delta_time <= 0:
+        return 0.0
+    return 1.0 / delta_time
+
+def get_resource_path(filename: str) -> str:
+    """Constructs asset path for game resources."""
+    return f"assets/data/{filename}"
