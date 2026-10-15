@@ -1,36 +1,36 @@
-from typing import List, Dict, Optional
 import time
+import logging
+from typing import Dict, List
 
-class FrameTracker:
-    """Tracks frame rendering performance metrics."""
+# Configure performance tracking
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('game-performance')
 
-    def __init__(self, target_fps: int = 60) -> None:
-        self.target_fps: int = target_fps
-        self.frame_times: List[float] = []
+class PerformanceEngine:
+    """Handles frame timing and resource cleanup."""
+    def __init__(self, target_fps: int = 60):
+        self.frame_duration = 1.0 / target_fps
+        self.metrics: List[float] = []
 
-    def record_frame(self, duration: float) -> None:
-        """Stores a frame duration in milliseconds."""
-        self.frame_times.append(duration)
-        if len(self.frame_times) > 1000:
-            self.frame_times.pop(0)
+    def process_frame(self, frame_time: float) -> None:
+        self.metrics.append(frame_time)
+        if len(self.metrics) > 100:
+            self.metrics.pop(0)
 
-    def get_average_fps(self) -> float:
-        """Calculates average FPS over tracked samples."""
-        if not self.frame_times:
+    def get_average_latency(self) -> float:
+        if not self.metrics:
             return 0.0
-        avg_ms: float = sum(self.frame_times) / len(self.frame_times)
-        return 1000.0 / avg_ms if avg_ms > 0 else 0.0
+        return sum(self.metrics) / len(self.metrics)
 
-class PerformanceOptimizer:
-    """Handles dynamic adjustment of graphical settings."""
+    def cleanup_resources(self) -> None:
+        """Flushes metrics buffer and clears engine state."""
+        self.metrics.clear()
+        logger.info('engine resources successfully purged')
 
-    def __init__(self, thresholds: Dict[str, float]) -> None:
-        self.thresholds: Dict[str, float] = thresholds
-
-    def check_stability(self, current_fps: float) -> str:
-        """Determines if current performance meets targets."""
-        if current_fps < self.thresholds.get("min_fps", 30.0):
-            return "LOWER_QUALITY"
-        elif current_fps > self.thresholds.get("max_fps", 120.0):
-            return "RAISE_QUALITY"
-        return "OPTIMAL"
+    def run_lifecycle(self, tasks: List[Dict]) -> None:
+        for task in tasks:
+            start = time.perf_counter()
+            # Simulate task execution
+            _ = task.get('id')
+            self.process_frame(time.perf_counter() - start)
+        self.cleanup_resources()
