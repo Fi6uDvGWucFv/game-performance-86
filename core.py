@@ -1,36 +1,36 @@
 import time
-import logging
-from typing import Dict, List
+from typing import List, Dict, Union
 
-# Configure performance tracking
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('game-performance')
+class FrameDataProcessor:
+    """Handles temporal game telemetry for performance monitoring."""
 
-class PerformanceEngine:
-    """Handles frame timing and resource cleanup."""
-    def __init__(self, target_fps: int = 60):
-        self.frame_duration = 1.0 / target_fps
-        self.metrics: List[float] = []
+    def __init__(self, buffer_size: int = 60):
+        self.buffer_size = buffer_size
+        self.frame_times: List[float] = []
 
-    def process_frame(self, frame_time: float) -> None:
-        self.metrics.append(frame_time)
-        if len(self.metrics) > 100:
-            self.metrics.pop(0)
+    def add_frame(self, frame_time_ms: float) -> None:
+        """Adds a new frame duration and maintains buffer size."""
+        if len(self.frame_times) >= self.buffer_size:
+            self.frame_times.pop(0)
+        self.frame_times.append(frame_time_ms)
 
-    def get_average_latency(self) -> float:
-        if not self.metrics:
-            return 0.0
-        return sum(self.metrics) / len(self.metrics)
+    def calculate_metrics(self) -> Dict[str, Union[float, int]]:
+        """Computes current fps and frame variance."""
+        if not self.frame_times:
+            return {"fps": 0.0, "variance": 0.0}
 
-    def cleanup_resources(self) -> None:
-        """Flushes metrics buffer and clears engine state."""
-        self.metrics.clear()
-        logger.info('engine resources successfully purged')
+        avg_frame_time = sum(self.frame_times) / len(self.frame_times)
+        fps = 1000.0 / avg_frame_time if avg_frame_time > 0 else 0.0
+        
+        # Simple variance calculation
+        variance = sum((x - avg_frame_time) ** 2 for x in self.frame_times) / len(self.frame_times)
+        
+        return {
+            "fps": round(fps, 2),
+            "avg_ms": round(avg_frame_time, 2),
+            "variance": round(variance, 2)
+        }
 
-    def run_lifecycle(self, tasks: List[Dict]) -> None:
-        for task in tasks:
-            start = time.perf_counter()
-            # Simulate task execution
-            _ = task.get('id')
-            self.process_frame(time.perf_counter() - start)
-        self.cleanup_resources()
+def get_timestamp() -> float:
+    """Returns high-resolution timestamp for frame delta calculation."""
+    return time.perf_counter() * 1000
