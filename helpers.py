@@ -1,55 +1,29 @@
-from typing import List, Dict
+from typing import List, Dict, Union, Optional
+import time
 
-def calculate_average_fps(frame_times_ms: List[float]) -> float:
-    """Calculate the average frames per second from a list of frame times in milliseconds."""
-    if not frame_times_ms:
+def calculate_frame_delta(timestamps: List[float]) -> float:
+    """Calculates the average time difference between frames in seconds."""
+    if len(timestamps) < 2:
         return 0.0
-    total_time_s = sum(frame_times_ms) / 1000.0
-    if total_time_s == 0:
-        return 0.0
-    return len(frame_times_ms) / total_time_s
+    diffs = [timestamps[i] - timestamps[i-1] for i in range(1, len(timestamps))]
+    return sum(diffs) / len(diffs)
 
-def calculate_percentile_fps(frame_times_ms: List[float], percentile: float) -> float:
-    """
-    Calculate the FPS representation of a specific percentile of frame times.
-    To find the 1% low (99th percentile of frame times): percentile = 99.0
-    To find the 0.1% low (99.9th percentile of frame times): percentile = 99.9
-    """
-    if not frame_times_ms:
-        return 0.0
+def format_performance_metrics(metrics: Dict[str, Union[int, float]]) -> str:
+    """Converts raw performance metrics into a human-readable display string."""
+    output = []
+    for key, value in metrics.items():
+        formatted_val = f"{value:.2f}" if isinstance(value, float) else str(value)
+        output.append(f"{key.replace('_', ' ').title()}: {formatted_val}")
+    return " | ".join(output)
 
-    sorted_times = sorted(frame_times_ms)
-    index = int(len(sorted_times) * (percentile / 100.0))
-    index = min(max(index, 0), len(sorted_times) - 1)
-    target_frame_time = sorted_times[index]
+def get_gpu_load_status(load_percentage: float) -> str:
+    """Determines the operational health status based on GPU load."""
+    if load_percentage < 30.0:
+        return "IDLE"
+    elif load_percentage < 85.0:
+        return "OPTIMAL"
+    return "THROTTLING"
 
-    if target_frame_time <= 0:
-        return 0.0
-    return 1000.0 / target_frame_time
-
-def classify_performance_tier(avg_fps: float, low_1percent_fps: float) -> str:
-    """Classify gaming performance tier based on average and 1% low FPS."""
-    if avg_fps >= 120 and low_1percent_fps >= 90:
-        return "competitive_excellent"
-    elif avg_fps >= 60 and low_1percent_fps >= 45:
-        return "smooth_high_quality"
-    elif avg_fps >= 30 and low_1percent_fps >= 25:
-        return "playable_console_like"
-    elif avg_fps < 30:
-        return "unplayable_stuttery"
-    return "unstable_performance"
-
-def get_performance_metrics(frame_times_ms: List[float]) -> Dict[str, float]:
-    """Aggregate performance metrics from raw frame times."""
-    if not frame_times_ms:
-        return {"avg_fps": 0.0, "one_percent_low": 0.0, "zero_one_percent_low": 0.0}
-
-    avg_fps = calculate_average_fps(frame_times_ms)
-    one_percent_low = calculate_percentile_fps(frame_times_ms, 99.0)
-    zero_one_percent_low = calculate_percentile_fps(frame_times_ms, 99.9)
-
-    return {
-        "avg_fps": round(avg_fps, 2),
-        "one_percent_low": round(one_percent_low, 2),
-        "zero_one_percent_low": round(zero_one_percent_low, 2)
-    }
+def filter_stuttering_frames(latencies: List[float], threshold_ms: float = 16.67) -> List[float]:
+    """Returns a list of frames that exceeded the target frame time budget."""
+    return [t for t in latencies if t > threshold_ms]
