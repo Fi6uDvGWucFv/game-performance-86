@@ -1,36 +1,25 @@
-import logging
+import json
+from typing import List, Dict, Any
 
-def validate_input(data):
-    """Ensures game input payload is valid."""
-    required = {'player_id', 'action_type', 'timestamp'}
-    if not isinstance(data, dict):
-        return False
-    if not all(key in data for key in required):
-        return False
-    if not isinstance(data['player_id'], int) or data['player_id'] < 0:
-        return False
-    return True
-
-def main_processing_loop(event_queue):
-    """Main loop to process incoming game events."""
-    logging.basicConfig(level=logging.INFO)
+def format_game_telemetry(data: List[Dict[str, Any]]) -> str:
+    """Processes raw performance logs into structured JSON."""
+    processed = []
+    for entry in data:
+        # Ensure basic metrics exist to avoid corrupt data entries
+        if 'fps' in entry and 'frame_time' in entry:
+            processed.append({
+                'timestamp': entry.get('ts', 0),
+                'fps': float(entry['fps']),
+                'frame_ms': round(float(entry['frame_time']), 2),
+                'gpu_load': entry.get('gpu', 0),
+                'status': 'stable' if entry['fps'] > 30 else 'lagging'
+            })
     
-    while True:
-        event = event_queue.get()
-        if event is None:
-            break
+    return json.dumps({'count': len(processed), 'metrics': processed})
 
-        # validation step before processing
-        if not validate_input(event):
-            logging.warning(f"Discarding invalid input: {event}")
-            continue
-            
-        try:
-            process_event(event)
-        except Exception as e:
-            logging.error(f"Processing error: {e}")
-
-def process_event(event):
-    """Business logic for individual game events."""
-    # Placeholder for game logic processing
-    print(f"Processing event for player {event['player_id']}")
+def calculate_average_latency(data: List[Dict[str, Any]]) -> float:
+    """Computes mean frame time across the provided window."""
+    latencies = [d.get('frame_time', 0) for d in data if isinstance(d.get('frame_time'), (int, float))]
+    if not latencies:
+        return 0.0
+    return sum(latencies) / len(latencies)
