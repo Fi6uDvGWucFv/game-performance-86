@@ -1,38 +1,31 @@
-import logging
+import json
+from typing import Dict, Any, List, Optional
 
-# Configure logger for performance metrics
-logger = logging.getLogger('game-performance-86')
+def normalize_game_metrics(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Standardizes raw game telemetry metrics for analysis."""
+    processed = {
+        "session_id": str(data.get("sid", "unknown")),
+        "fps_avg": float(data.get("fps", 0.0)),
+        "frame_time_ms": float(data.get("ft", 0.0)),
+        "dropped_frames": int(data.get("df", 0)),
+        "timestamp": data.get("ts", 0)
+    }
+    
+    # Calculate performance health score
+    processed["health_index"] = round(processed["fps_avg"] / (processed["frame_time_ms"] + 1), 2)
+    
+    return processed
 
-def validate_input(data):
-    """Ensures incoming game telemetry is within valid ranges."""
-    if not isinstance(data, dict):
-        return False
-    if 'frame_time' not in data or not (0 < data['frame_time'] < 1000):
-        return False
-    if 'gpu_temp' not in data or not (0 < data['gpu_temp'] < 120):
-        return False
-    return True
-
-def process_telemetry(stream):
-    """Main loop for processing real-time game performance data."""
-    for packet in stream:
+def batch_process_metrics(payloads: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Processes list of telemetry objects into clean structures."""
+    results = []
+    for entry in payloads:
         try:
-            if not validate_input(packet):
-                logger.warning(f"Invalid packet dropped: {packet}")
-                continue
-            
-            # Simulate core performance logic
-            fps = 1000 / packet['frame_time']
-            logger.info(f"Processed performance: {fps:.2f} FPS")
-            
-        except Exception as e:
-            logger.error(f"Processing error: {str(e)}")
+            results.append(normalize_game_metrics(entry))
+        except (ValueError, TypeError):
+            continue
+    return results
 
-if __name__ == '__main__':
-    # Example usage for performance testing
-    test_stream = [
-        {'frame_time': 16.6, 'gpu_temp': 65},
-        {'frame_time': -5, 'gpu_temp': 50},
-        {'frame_time': 33.3, 'gpu_temp': 70}
-    ]
-    process_telemetry(test_stream)
+def format_for_db(metrics: Dict[str, Any]) -> str:
+    """Serializes processed metrics for database storage."""
+    return json.dumps(metrics)
