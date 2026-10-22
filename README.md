@@ -1,53 +1,38 @@
 # game-performance-86
 
-A high-performance Python toolkit designed to analyze, monitor, and optimize hardware telemetry during intensive gaming sessions. This library bridges the gap between raw system metrics and actionable performance insights for developers and enthusiasts alike.
+`game-performance-86` is a lightweight Python toolkit designed to monitor and optimize system resources during gaming sessions. It provides real-time telemetry to help identify bottlenecks and minimize latency in resource-heavy environments.
 
 ## Features
 
-*   **Real-time Telemetry:** Stream frame-time consistency, GPU temperature, and VRAM utilization with sub-millisecond precision.
-*   **Bottleneck Detection:** Automated heuristic analysis to identify CPU-bound versus GPU-bound frames.
-*   **CSV Log Export:** Generate formatted performance reports compatible with Excel and Tableau for deep-dive analysis.
-*   **Low-Overhead Profiling:** Optimized background threading ensures that the monitoring process consumes less than 0.5% of total system CPU load.
+*   **Real-time Metrics:** Tracks CPU/GPU temperatures, usage percentages, and memory allocation with sub-second polling rates.
+*   **Background Throttling:** Automatically suspends non-essential background processes when a defined game executable is detected.
+*   **Frame-Time Logging:** Captures per-frame performance data to a CSV file for post-session analysis and stability testing.
+*   **Low-Overhead CLI:** Optimized for minimal resource footprint, ensuring the monitor itself doesn't impact your frame rate.
 
 ## Installation
 
-Ensure you have Python 3.8+ installed on your system. Install the package via pip:
+Ensure you have Python 3.8+ installed on your system. Clone the repository and install the required dependencies:
 
 ```bash
-pip install game-performance-86
+git clone https://github.com/Developer/game-performance-86.git
+cd game-performance-86
+pip install -r requirements.txt
 ```
 
-For hardware monitoring access on Windows, you may need to run your terminal as an Administrator.
+## Usage
 
-## Basic Usage
+To start monitoring a specific process (e.g., `eldenring.exe`), run the tool with administrative privileges:
 
-Import the `PerformanceMonitor` class to start tracking your system statistics immediately.
-
-```python
-from gp86 import PerformanceMonitor
-
-# Initialize the monitor
-monitor = PerformanceMonitor(interval=0.1)
-
-# Start tracking in the background
-monitor.start()
-
-try:
-    while True:
-        # Fetch current frame stats
-        stats = monitor.get_latest()
-        print(f"Current FPS: {stats['fps']} | GPU Load: {stats['gpu_load']}%")
-except KeyboardInterrupt:
-    monitor.stop()
-    monitor.save_report("session_log.csv")
+```bash
+# Monitor a specific process by name
+sudo python monitor.py --process eldenring.exe --log performance_log.csv
 ```
 
-## Requirements
-*   **OS:** Windows 10/11 (DirectX support required)
-*   **Dependencies:** `psutil`, `pywin32`
+The script will output a live dashboard to your terminal and begin writing performance metrics to `performance_log.csv`. To stop the monitoring session, press `Ctrl+C`.
 
-## License
+## Configuration
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+You can customize the polling interval and target thresholds by editing the `config.yaml` file located in the root directory. Adjust the `throttle_threshold` settings to suit your system's hardware limitations.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
