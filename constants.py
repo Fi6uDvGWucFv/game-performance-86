@@ -1,27 +1,25 @@
-from typing import Final, Dict, List
+import multiprocessing
 
-# Configuration for performance monitoring thresholds
-MAX_FRAME_TIME_MS: Final[float] = 16.67
-WARNING_FRAME_TIME_MS: Final[float] = 33.33
+# hardware-level optimization thresholds for gaming engine
+MAX_FRAME_BUFFER_SIZE = 144
+TARGET_TICK_RATE = 60
 
-# Standardized metric identifiers for telemetry
-METRIC_FPS: Final[str] = "fps"
-METRIC_LATENCY: Final[str] = "latency_ms"
-METRIC_MEMORY: Final[str] = "memory_mb"
+# memory allocation management constants
+CHUNK_SIZE_BYTES = 1024 * 64
+CACHE_EXPIRY_SECONDS = 300
 
-# Supported gaming hardware categories
-SUPPORTED_PLATFORMS: Final[List[str]] = ["windows", "linux", "macos", "console"]
+# threading optimization for core workload balancing
+CORE_COUNT = multiprocessing.cpu_count()
+WORKER_THREAD_POOL_SIZE = max(4, CORE_COUNT * 2)
 
-# Error code mappings for engine diagnostics
-DIAGNOSTIC_CODES: Final[Dict[int, str]] = {
-    1001: "Insufficient system memory",
-    1002: "GPU driver timeout",
-    1003: "Frame drop threshold exceeded",
-    1004: "Network packet jitter high"
-}
+# network throughput tuning constants
+PACKET_BUFFER_LIMIT = 2048
+SOCKET_TIMEOUT_MS = 500
 
-# Default performance sampling interval in seconds
-DEFAULT_SAMPLING_RATE: Final[float] = 0.5
+# performance flag settings
+ENABLE_PREFETCH = True
+USE_FAST_MATH = True
 
-# Internal naming conventions for reporting
-NAMESPACE_PREFIX: Final[str] = "game_perf_86"
+# gpu acceleration parameters
+TEXTURE_COMPRESSION_LEVEL = 2
+BATCH_RENDER_LIMIT = 500
