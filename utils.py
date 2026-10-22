@@ -1,34 +1,27 @@
 import time
 import functools
-from typing import Callable, Any
+import logging
 
-def format_frame_time(ms: float) -> str:
-    """Converts milliseconds to a readable string with unit."""
-    return f"{ms:.2f}ms"
+logger = logging.getLogger(__name__)
 
-def throttle(interval: float):
-    """Decorator to limit function call frequency in ms."""
-    def decorator(func: Callable):
-        last_called = [0.0]
+def retry(max_attempts=3, delay=1.0, exceptions=(Exception,)):
+    """Decorator to retry network operations on failure."""
+    def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
-            now = time.perf_counter()
-            if now - last_called[0] >= (interval / 1000.0):
-                last_called[0] = now
-                return func(*args, **kwargs)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    attempts += 1
+                    if attempts >= max_attempts:
+                        logger.error(f"Final attempt failed for {func.__name__}: {e}")
+                        raise
+                    
+                    sleep_time = delay * (2 ** (attempts - 1))
+                    logger.warning(f"Retry {attempts}/{max_attempts} for {func.__name__} after {sleep_time}s")
+                    time.sleep(sleep_time)
+            return None
         return wrapper
     return decorator
-
-def clamp(value: float, min_val: float, max_val: float) -> float:
-    """Ensures value stays within inclusive range."""
-    return max(min_val, min(value, max_val))
-
-def calculate_fps(delta_time: float) -> float:
-    """Calculates frames per second from frame delta."""
-    if delta_time <= 0:
-        return 0.0
-    return 1.0 / delta_time
-
-def get_resource_path(filename: str) -> str:
-    """Constructs asset path for game resources."""
-    return f"assets/data/{filename}"
