@@ -1,33 +1,51 @@
-class GamePerformanceError(Exception):
-    """Base exception for the game-performance-86 package."""
-    pass
+"""Custom exception classes for game performance monitoring and profiling."""
 
-class ResourceLoadError(GamePerformanceError):
-    """Raised when a game asset fails to load."""
-    pass
+from typing import Any, Dict, Optional
+
+
+class GamePerformanceError(Exception):
+    """Base exception for all game performance monitoring errors."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+        super().__init__(message)
+        self.message: str = message
+        self.details: Dict[str, Any] = details or {}
+
 
 class FrameRateDropError(GamePerformanceError):
-    """Raised when performance threshold is breached."""
-    pass
+    """Raised when game frame rate drops below the minimum acceptable threshold."""
 
-class ConfigurationError(GamePerformanceError):
-    """Raised when game settings are invalid."""
-    pass
+    def __init__(self, current_fps: float, target_fps: float, duration_seconds: float) -> None:
+        message: str = f"FPS dropped to {current_fps:.1f} (target: {target_fps:.1f}) for {duration_seconds:.2f}s"
+        details: Dict[str, Any] = {
+            "current_fps": current_fps,
+            "target_fps": target_fps,
+            "duration_seconds": duration_seconds,
+        }
+        super().__init__(message, details)
 
-def raise_if_threshold_exceeded(fps: float, threshold: float = 30.0):
-    """Validate performance metrics against system requirements."""
-    if fps < threshold:
-        raise FrameRateDropError(f"FPS {fps} is below minimum {threshold}")
 
-def validate_resource_path(path: str):
-    """Ensure paths exist to prevent runtime asset errors."""
-    import os
-    if not os.path.exists(path):
-        raise ResourceLoadError(f"Asset path not found: {path}")
+class MemoryThresholdExceededError(GamePerformanceError):
+    """Raised when VRAM or system RAM usage exceeds the configured limit."""
 
-# Standardized error management for engine hooks
-def handle_critical_failure(error: Exception):
-    """Global catch point for engine-level crashes."""
-    print(f"[CRITICAL] {type(error).__name__}: {error}")
-    # Additional logic for logging to file or telemetry server
-    raise error
+    def __init__(self, memory_type: str, used_mb: float, limit_mb: float) -> None:
+        message: str = f"{memory_type.upper()} usage exceeded limit: {used_mb:.1f}MB / {limit_mb:.1f}MB"
+        details: Dict[str, Any] = {
+            "memory_type": memory_type,
+            "used_mb": used_mb,
+            "limit_mb": limit_mb,
+        }
+        super().__init__(message, details)
+
+
+class BenchmarkTimeoutError(GamePerformanceError):
+    """Raised when a performance benchmark run exceeds its allocated time limit."""
+
+    def __init__(self, benchmark_name: str, elapsed_seconds: float, max_seconds: float) -> None:
+        message: str = f"Benchmark '{benchmark_name}' timed out after {elapsed_seconds:.1f}s (max: {max_seconds:.1f}s)"
+        details: Dict[str, Any] = {
+            "benchmark_name": benchmark_name,
+            "elapsed_seconds": elapsed_seconds,
+            "max_seconds": max_seconds,
+        }
+        super().__init__(message, details)
