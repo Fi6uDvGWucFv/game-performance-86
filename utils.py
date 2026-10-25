@@ -1,63 +1,53 @@
-"""Performance metric utilities for game frame rate and timing analysis."""
+"""Performance metrics calculation utilities for gaming benchmark data."""
 
-from typing import List, Dict, Union
-
-
-def calculate_fps(frame_times_ms: List[float]) -> float:
-    """Calculate average frames per second from frame duration samples in milliseconds.
-
-    Args:
-        frame_times_ms: List of frame durations measured in milliseconds.
-
-    Returns:
-        Average frames per second, or 0.0 if input is empty or invalid.
-    """
-    if not frame_times_ms:
-        return 0.0
-
-    valid_times = [t for t in frame_times_ms if t > 0]
-    if not valid_times:
-        return 0.0
-
-    avg_frame_time_sec = (sum(valid_times) / len(valid_times)) / 1000.0
-    return round(1.0 / avg_frame_time_sec, 2) if avg_frame_time_sec > 0 else 0.0
+from typing import Dict, List
 
 
-def calculate_frame_time_percentile(
-    frame_times_ms: List[float], percentile: float = 99.0
-) -> float:
-    """Calculate specific percentile frame time (e.g. 99th percentile for 1% lows).
+def calculate_fps_metrics(frame_times_ms: List[float]) -> Dict[str, float]:
+    """Calculate average FPS, 1% low FPS, and 0.1% low FPS from frame times.
 
     Args:
         frame_times_ms: List of frame durations measured in milliseconds.
-        percentile: Target percentile rank between 0.0 and 100.0.
 
     Returns:
-        Frame time value at the specified percentile in milliseconds.
+        Dictionary containing avg_fps, low_1percent, and low_0_1percent.
     """
     if not frame_times_ms:
-        return 0.0
+        return {"avg_fps": 0.0, "low_1percent": 0.0, "low_0_1percent": 0.0}
 
-    sorted_times = sorted(frame_times_ms)
-    index = int((percentile / 100.0) * len(sorted_times))
-    index = min(max(index, 0), len(sorted_times) - 1)
-    return round(sorted_times[index], 2)
+    # Convert frame times (ms) to FPS
+    fps_values = [1000.0 / ft for ft in frame_times_ms if ft > 0]
+    if not fps_values:
+        return {"avg_fps": 0.0, "low_1percent": 0.0, "low_0_1percent": 0.0}
+
+    sorted_fps = sorted(fps_values)
+    total_frames = len(sorted_fps)
+
+    # Calculate lower percentiles for drop/stutter assessment
+    one_percent_idx = max(1, int(total_frames * 0.01))
+    point_one_percent_idx = max(1, int(total_frames * 0.001))
+
+    avg_fps = sum(sorted_fps) / total_frames
+    low_1percent = sum(sorted_fps[:one_percent_idx]) / one_percent_idx
+    low_0_1percent = sum(sorted_fps[:point_one_percent_idx]) / point_one_percent_idx
+
+    return {
+        "avg_fps": round(avg_fps, 2),
+        "low_1percent": round(low_1percent, 2),
+        "low_0_1percent": round(low_0_1percent, 2),
+    }
 
 
-def evaluate_performance_tier(avg_fps: float, p99_ms: float) -> str:
-    """Determine performance quality tier based on average FPS and 99th percentile frame time.
+def clean_frame_data(
+    frame_times_ms: List[float], max_threshold_ms: float = 1000.0
+) -> List[float]:
+    """Filter out invalid or extreme outlier frame durations.
 
     Args:
-        avg_fps: Average frames per second.
-        p99_ms: 99th percentile frame time in milliseconds.
+        frame_times_ms: Raw frame duration measurements.
+        max_threshold_ms: Upper bound for valid frame time in milliseconds.
 
     Returns:
-        Performance quality grade string ('excellent', 'good', 'fair', 'poor').
+        Filtered list of frame durations.
     """
-    if avg_fps >= 60.0 and p99_ms <= 20.0:
-        return "excellent"
-    elif avg_fps >= 45.0 and p99_ms <= 33.3:
-        return "good"
-    elif avg_fps >= 30.0 and p99_ms <= 50.0:
-        return "fair"
-    return "poor"
+    return [ft for ft in frame_times_ms if 0.1 <= ft <= max_threshold_ms]
