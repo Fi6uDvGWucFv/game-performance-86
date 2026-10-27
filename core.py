@@ -1,36 +1,41 @@
 import time
-from typing import List, Dict, Union
+import functools
+import logging
 
-class FrameDataProcessor:
-    """Handles temporal game telemetry for performance monitoring."""
+logger = logging.getLogger('game-performance-86')
 
-    def __init__(self, buffer_size: int = 60):
-        self.buffer_size = buffer_size
-        self.frame_times: List[float] = []
+def retry_network_operation(max_attempts=3, delay=1.0, backoff=2):
+    """Decorator to retry network operations with exponential backoff."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            current_delay = delay
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except (ConnectionError, TimeoutError) as e:
+                    attempts += 1
+                    if attempts >= max_attempts:
+                        logger.error(f"Failed after {max_attempts} attempts: {e}")
+                        raise
+                    
+                    logger.warning(f"Attempt {attempts} failed, retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+            return None
+        return wrapper
+    return decorator
 
-    def add_frame(self, frame_time_ms: float) -> None:
-        """Adds a new frame duration and maintains buffer size."""
-        if len(self.frame_times) >= self.buffer_size:
-            self.frame_times.pop(0)
-        self.frame_times.append(frame_time_ms)
+@retry_network_operation(max_attempts=3, delay=0.5)
+def fetch_game_data(endpoint):
+    """Simulated network call to fetch player performance stats."""
+    # Actual networking logic goes here
+    return {'status': 'success', 'data': {}}
 
-    def calculate_metrics(self) -> Dict[str, Union[float, int]]:
-        """Computes current fps and frame variance."""
-        if not self.frame_times:
-            return {"fps": 0.0, "variance": 0.0}
-
-        avg_frame_time = sum(self.frame_times) / len(self.frame_times)
-        fps = 1000.0 / avg_frame_time if avg_frame_time > 0 else 0.0
-        
-        # Simple variance calculation
-        variance = sum((x - avg_frame_time) ** 2 for x in self.frame_times) / len(self.frame_times)
-        
-        return {
-            "fps": round(fps, 2),
-            "avg_ms": round(avg_frame_time, 2),
-            "variance": round(variance, 2)
-        }
-
-def get_timestamp() -> float:
-    """Returns high-resolution timestamp for frame delta calculation."""
-    return time.perf_counter() * 1000
+if __name__ == '__main__':
+    try:
+        data = fetch_game_data('api.server.internal/stats')
+        print(data)
+    except Exception as e:
+        print(f"Operation failed: {e}")
