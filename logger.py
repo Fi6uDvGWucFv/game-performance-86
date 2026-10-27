@@ -2,32 +2,37 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-def get_logger(name: str, log_file: str = 'game_performance.log') -> logging.Logger:
-    """Configures a rotating file logger for performance tracking."""
+# Logger configuration for game-performance-86
+LOG_FILE = 'game_perf.log'
+MAX_BYTES = 5 * 1024 * 1024  # 5MB
+BACKUP_COUNT = 3
+
+def setup_logger(name='game_logger'):
+    """Initializes a rotating file logger for performance tracking."""
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
-    # Prevent duplicate handlers if get_logger is called multiple times
+    # Prevent duplicate handlers if setup is called multiple times
     if not logger.handlers:
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
 
-        # Rotate files at 5MB, keep 3 backups
-        handler = RotatingFileHandler(
-            log_file, 
-            maxBytes=5*1024*1024, 
-            backupCount=3
+        # Rotating file handler configuration
+        file_handler = RotatingFileHandler(
+            LOG_FILE, 
+            maxBytes=MAX_BYTES, 
+            backupCount=BACKUP_COUNT
         )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
-        # Optional: Add stream handler for console output
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
+        # Stream handler for console output
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
 
     return logger
 
-# Instance for game-performance-86 tracking
-performance_logger = get_logger('performance_monitor')
+# Global instance for project use
+logger = setup_logger()
