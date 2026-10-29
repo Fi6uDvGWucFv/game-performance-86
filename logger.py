@@ -1,53 +1,33 @@
-import os
 import logging
 from logging.handlers import RotatingFileHandler
+import os
 
-DEFAULT_LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-PERFORMANCE_LOG_FILENAME = "game_performance.log"
-
-
-def setup_logger(
-    name: str = "game_perf",
-    log_dir: str = "logs",
-    log_level: int = logging.INFO,
-    max_bytes: int = 5 * 1024 * 1024,
-    backup_count: int = 5,
-) -> logging.Logger:
-    """Configures and returns a logger with rotating file and console handlers."""
+def setup_logger(name='game_performance', log_file='performance.log', level=logging.INFO):
+    """Initializes a rotating file logger for performance monitoring."""
     logger = logging.getLogger(name)
-    logger.setLevel(log_level)
+    logger.setLevel(level)
 
-    # Avoid duplicate handlers if setup is called multiple times
-    if logger.hasHandlers():
-        logger.handlers.clear()
+    # Prevent duplicate handlers if re-initialized
+    if not logger.handlers:
+        # 5MB per file, keep 3 backup files
+        handler = RotatingFileHandler(
+            log_file, 
+            maxBytes=5 * 1024 * 1024, 
+            backupCount=3
+        )
+        
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        
+        # Optional: log to console as well
+        console = logging.StreamHandler()
+        console.setFormatter(formatter)
+        logger.addHandler(console)
 
-    formatter = logging.Formatter(DEFAULT_LOG_FORMAT)
-
-    # Ensure log directory exists
-    os.makedirs(log_dir, exist_ok=True)
-    log_filepath = os.path.join(log_dir, PERFORMANCE_LOG_FILENAME)
-
-    # Rotating file handler for performance metrics archiving
-    file_handler = RotatingFileHandler(
-        log_filepath,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding="utf-8",
-    )
-    file_handler.setLevel(log_level)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    # Console handler for real-time monitoring during gameplay sessions
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-
-    logger.info("Performance logger initialized: %s", log_filepath)
     return logger
 
-
-def log_frame_metrics(logger: logging.Logger, frame_id: int, fps: float, frame_time_ms: float) -> None:
-    """Convenience helper to record frame render performance metrics."""
-    logger.info("Frame %d | FPS: %.2f | FrameTime: %.2f ms", frame_id, fps, frame_time_ms)
+# Global logger instance for the application
+performance_logger = setup_logger()
