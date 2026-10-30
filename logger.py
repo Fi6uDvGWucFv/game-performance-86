@@ -1,33 +1,39 @@
 import logging
-from logging.handlers import RotatingFileHandler
-import os
+import sys
+from typing import Optional
 
-def setup_logger(name='game_performance', log_file='performance.log', level=logging.INFO):
-    """Initializes a rotating file logger for performance monitoring."""
-    logger = logging.getLogger(name)
+def setup_performance_logger(name: str, level: int = logging.INFO) -> logging.Logger:
+    """
+    Initialize a configured logger for game performance metrics.
+
+    Args:
+        name: The name of the logger instance.
+        level: The logging severity threshold.
+
+    Returns:
+        Configured logging.Logger instance.
+    """
+    logger: logging.Logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    # Prevent duplicate handlers if re-initialized
+    handler: logging.StreamHandler = logging.StreamHandler(sys.stdout)
+    formatter: logging.Formatter = logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(name)s: %(message)s'
+    )
+    handler.setFormatter(formatter)
+    
     if not logger.handlers:
-        # 5MB per file, keep 3 backup files
-        handler = RotatingFileHandler(
-            log_file, 
-            maxBytes=5 * 1024 * 1024, 
-            backupCount=3
-        )
-        
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        handler.setFormatter(formatter)
         logger.addHandler(handler)
         
-        # Optional: log to console as well
-        console = logging.StreamHandler()
-        console.setFormatter(formatter)
-        logger.addHandler(console)
-
     return logger
 
-# Global logger instance for the application
-performance_logger = setup_logger()
+def log_performance_metric(logger: logging.Logger, metric: str, value: float) -> None:
+    """
+    Log specific performance metrics for the game engine.
+
+    Args:
+        logger: The logger instance to use.
+        metric: The name of the performance metric.
+        value: The measured value.
+    """
+    logger.info(f"PERF_METRIC: {metric} = {value}")
