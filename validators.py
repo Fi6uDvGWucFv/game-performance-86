@@ -1,33 +1,32 @@
-import logging
-
-logger = logging.getLogger(__name__)
-
-class ValidationError(Exception):
-    """Custom exception for validation failures."""
-    pass
-
-def validate_frame_rate(fps: int) -> bool:
-    """Ensures frame rate remains within hardware bounds."""
-    min_fps, max_fps = 30, 240
-    try:
-        if not isinstance(fps, int):
-            raise TypeError(f"Expected integer for fps, got {type(fps).__name__}")
-        if not (min_fps <= fps <= max_fps):
-            raise ValueError(f"FPS {fps} outside allowed range ({min_fps}-{max_fps})")
-        return True
-    except (TypeError, ValueError) as e:
-        logger.error(f"Frame rate validation failure: {e}")
-        raise ValidationError(str(e)) from e
-
-def sanitize_config_path(path: str) -> str:
-    """Sanitizes and validates game configuration file paths."""
-    if not path or not isinstance(path, str):
-        logger.warning("Empty or invalid path provided, defaulting to system root")
-        return "./config/default.json"
+def validate_input_data(data):
+    """Validates player performance metrics input."""
+    if not isinstance(data, dict):
+        return False
     
-    # Prevent directory traversal attacks
-    if ".." in path:
-        logger.critical(f"Security violation attempt: {path}")
-        raise ValidationError("Invalid path format detected")
+    required_fields = {"fps": float, "frame_time": float, "gpu_load": float}
     
-    return path.strip()
+    for field, expected_type in required_fields.items():
+        val = data.get(field)
+        if val is None or not isinstance(val, expected_type):
+            return False
+        
+        # Performance bounds checking
+        if field == "fps" and (val < 0 or val > 1000):
+            return False
+        if field == "gpu_load" and (val < 0 or val > 100):
+            return False
+            
+    return True
+
+def process_game_loop(queue):
+    """Main loop implementation with integrated validation."""
+    processed_data = []
+    for entry in queue:
+        if validate_input_data(entry):
+            # Sanitize and normalize frame time
+            entry['frame_time'] = round(entry['frame_time'], 4)
+            processed_data.append(entry)
+        else:
+            # Skip malformed data packets
+            continue
+    return processed_data
