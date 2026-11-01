@@ -1,32 +1,33 @@
-def validate_input_data(data):
-    """Validates player performance metrics input."""
-    if not isinstance(data, dict):
-        return False
+class InputValidationError(Exception):
+    """Custom exception for game input processing errors."""
+    pass
+
+def validate_game_input(data: dict) -> bool:
+    """
+    Validates player input structure and constraints.
+    Ensures critical gameplay metrics are within safe bounds.
+    """
+    required_keys = {'player_id', 'action_type', 'value'}
     
-    required_fields = {"fps": float, "frame_time": float, "gpu_load": float}
+    if not all(key in data for key in required_keys):
+        raise InputValidationError("Missing mandatory input fields")
     
-    for field, expected_type in required_fields.items():
-        val = data.get(field)
-        if val is None or not isinstance(val, expected_type):
-            return False
-        
-        # Performance bounds checking
-        if field == "fps" and (val < 0 or val > 1000):
-            return False
-        if field == "gpu_load" and (val < 0 or val > 100):
-            return False
-            
+    if not isinstance(data['player_id'], int) or data['player_id'] < 0:
+        raise InputValidationError("Invalid player_id format")
+
+    if not isinstance(data['value'], (int, float)) or not (-1000 <= data['value'] <= 1000):
+        raise InputValidationError("Input value out of operational range")
+
     return True
 
-def process_game_loop(queue):
-    """Main loop implementation with integrated validation."""
-    processed_data = []
-    for entry in queue:
-        if validate_input_data(entry):
-            # Sanitize and normalize frame time
-            entry['frame_time'] = round(entry['frame_time'], 4)
-            processed_data.append(entry)
-        else:
-            # Skip malformed data packets
-            continue
-    return processed_data
+def process_safe_input(raw_data: dict):
+    """
+    Orchestrates validation before core game logic.
+    """
+    try:
+        if validate_game_input(raw_data):
+            return True
+    except InputValidationError as e:
+        print(f"Validation failure in game loop: {e}")
+        return False
+    return False
