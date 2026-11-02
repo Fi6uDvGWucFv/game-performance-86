@@ -1,38 +1,33 @@
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 # game-performance-86
 
-`game-performance-86` is a lightweight Python toolkit designed to monitor and optimize system resources during gaming sessions. It provides real-time telemetry to help identify bottlenecks and minimize latency in resource-heavy environments.
+`game-performance-86` is a lightweight Python telemetry engine designed to capture, log, and analyze real-time gaming metrics on x86 architectures. It provides low-overhead frame time tracking, hardware utilization monitoring, and automated benchmark report generation without impacting rendering performance.
 
 ## Features
 
-*   **Real-time Metrics:** Tracks CPU/GPU temperatures, usage percentages, and memory allocation with sub-second polling rates.
-*   **Background Throttling:** Automatically suspends non-essential background processes when a defined game executable is detected.
-*   **Frame-Time Logging:** Captures per-frame performance data to a CSV file for post-session analysis and stability testing.
-*   **Low-Overhead CLI:** Optimized for minimal resource footprint, ensuring the monitor itself doesn't impact your frame rate.
+- **Sub-Millisecond Frame-Time Tracking**: Hooks into Direct3D and Vulkan APIs to record precise frame intervals and calculate accurate 1% and 0.1% low FPS metrics.
+- **Hardware Telemetry Logging**: Tracks real-time CPU core loads, GPU temperatures, VRAM consumption, and system memory limits with minimal overhead.
+- **Automated Report Generation**: Exports clean CSV logs and compiles interactive HTML performance summaries directly after a game exits.
+- **Thermal Throttling Detection**: Triggers immediate alerts when clock speeds drop due to thermal limits during gameplay.
 
 ## Installation
 
-Ensure you have Python 3.8+ installed on your system. Clone the repository and install the required dependencies:
+Ensure you have Python 3.9+ installed on your system.
 
 ```bash
 git clone https://github.com/Developer/game-performance-86.git
 cd game-performance-86
 pip install -r requirements.txt
+pip install .
 ```
 
-## Usage
+## Basic Usage
 
-To start monitoring a specific process (e.g., `eldenring.exe`), run the tool with administrative privileges:
+Run a telemetry session by pointing `game-performance-86` at an active executable:
 
-```bash
-# Monitor a specific process by name
-sudo python monitor.py --process eldenring.exe --log performance_log.csv
-```
+```python
+from game_performance import Profiler, ReportGenerator
 
-The script will output a live dashboard to your terminal and begin writing performance metrics to `performance_log.csv`. To stop the monitoring session, press `Ctrl+C`.
-
-## Configuration
-
-You can customize the polling interval and target thresholds by editing the `config.yaml` file located in the root directory. Adjust the `throttle_threshold` settings to suit your system's hardware limitations.
-
----
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+# Initialize telemetry target
+profiler
