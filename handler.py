@@ -1,42 +1,33 @@
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Any, Optional
 
-def process_frame_data(raw_data: str) -> Dict:
-    """
-    Parses raw telemetry strings from game engines and validates
-    essential performance metrics like fps and latency.
-    """
-    try:
-        data = json.loads(raw_data)
-        
-        # Ensure required metrics exist to prevent downstream errors
-        required_fields = ['fps', 'latency_ms', 'frame_time']
-        if not all(field in data for field in required_fields):
-            return {'status': 'error', 'message': 'missing metrics'}
-            
-        # Normalize values to ensure consistent data types for analytics
-        return {
-            'status': 'success',
-            'fps': int(data.get('fps', 0)),
-            'latency': float(data.get('latency_ms', 0.0)),
-            'frame_time': float(data.get('frame_time', 0.0))
-        }
-    except (json.JSONDecodeError, ValueError, TypeError):
-        return {'status': 'error', 'message': 'invalid payload'}
-
-def aggregate_metrics(metrics: List[Dict]) -> Dict:
-    """
-    Calculates average performance metrics across a collected list
-    of game frames.
-    """
-    if not metrics:
-        return {'avg_fps': 0, 'avg_latency': 0}
-        
-    count = len(metrics)
-    avg_fps = sum(m.get('fps', 0) for m in metrics) / count
-    avg_latency = sum(m.get('latency', 0) for m in metrics) / count
+def sanitize_game_metrics(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Cleans raw telemetry data for processing."""
+    required_fields = {'session_id', 'fps', 'ping'}
     
-    return {
-        'avg_fps': round(avg_fps, 2),
-        'avg_latency': round(avg_latency, 2)
+    # Filter to only known valid metrics
+    sanitized = {
+        k: v for k, v in data.items() 
+        if k in required_fields and v is not None
     }
+    
+    # Enforce type constraints for performance analysis
+    if 'fps' in sanitized:
+        sanitized['fps'] = float(sanitized['fps'])
+    if 'ping' in sanitized:
+        sanitized['ping'] = int(sanitized['ping'])
+        
+    return sanitized
+
+def batch_process_metrics(metrics: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Processes list of metrics and returns valid entries."""
+    return [sanitize_game_metrics(m) for m in metrics if all(k in m for k in ['session_id'])]
+
+def export_metrics_to_json(metrics: List[Dict[str, Any]], filepath: str) -> bool:
+    """Persists processed metrics to local storage."""
+    try:
+        with open(filepath, 'w') as f:
+            json.dump(metrics, f, indent=4)
+        return True
+    except (IOError, TypeError):
+        return False
