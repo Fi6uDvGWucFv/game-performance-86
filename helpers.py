@@ -2,28 +2,22 @@ from typing import List, Dict, Union, Optional
 import time
 
 def calculate_frame_delta(timestamps: List[float]) -> float:
-    """Calculates the average time difference between frames in seconds."""
+    """Calculates average time difference between consecutive frames in seconds."""
     if len(timestamps) < 2:
         return 0.0
-    diffs = [timestamps[i] - timestamps[i-1] for i in range(1, len(timestamps))]
-    return sum(diffs) / len(diffs)
+    
+    deltas = [timestamps[i] - timestamps[i-1] for i in range(1, len(timestamps))]
+    return sum(deltas) / len(deltas)
 
-def format_performance_metrics(metrics: Dict[str, Union[int, float]]) -> str:
-    """Converts raw performance metrics into a human-readable display string."""
-    output = []
-    for key, value in metrics.items():
-        formatted_val = f"{value:.2f}" if isinstance(value, float) else str(value)
-        output.append(f"{key.replace('_', ' ').title()}: {formatted_val}")
-    return " | ".join(output)
+def format_performance_stats(metrics: Dict[str, Union[int, float]]) -> str:
+    """Formats performance dictionary into a readable string for logging."""
+    lines = [f"{key.upper()}: {value:.2f}" for key, value in metrics.items()]
+    return " | ".join(lines)
 
-def get_gpu_load_status(load_percentage: float) -> str:
-    """Determines the operational health status based on GPU load."""
-    if load_percentage < 30.0:
-        return "IDLE"
-    elif load_percentage < 85.0:
-        return "OPTIMAL"
-    return "THROTTLING"
+def throttle_execution(interval_ms: int) -> None:
+    """Pauses execution to maintain a target frame budget."""
+    time.sleep(interval_ms / 1000.0)
 
-def filter_stuttering_frames(latencies: List[float], threshold_ms: float = 16.67) -> List[float]:
-    """Returns a list of frames that exceeded the target frame time budget."""
-    return [t for t in latencies if t > threshold_ms]
+def sanitize_input_values(data: Dict[str, Optional[float]]) -> Dict[str, float]:
+    """Ensures all performance metrics are non-negative floats."""
+    return {k: max(0.0, float(v or 0.0)) for k, v in data.items()}
