@@ -1,39 +1,38 @@
-from typing import Dict, Final
+import enum
 
-# Standardized gaming telemetry categories
-GAME_METRICS_SCHEMA: Final[Dict[str, str]] = {
-    "fps": "float",
-    "frame_time_ms": "float",
-    "gpu_temp_c": "int",
-    "cpu_usage_pct": "float",
-    "ram_usage_mb": "int",
-    "network_latency_ms": "int",
-    "gpu_utilization_pct": "int"
+# Gaming performance metrics and configuration thresholds
+
+class PerformanceTier(enum.Enum):
+    ULTRA = 'ultra'
+    HIGH = 'high'
+    MEDIUM = 'medium'
+    LOW = 'low'
+
+# Frame time thresholds in milliseconds
+FRAME_TIME_THRESHOLDS = {
+    PerformanceTier.ULTRA: 16.6,
+    PerformanceTier.HIGH: 33.3,
+    PerformanceTier.MEDIUM: 50.0,
+    PerformanceTier.LOW: 100.0
 }
 
-# Performance thresholds for performance monitoring
-PERF_THRESHOLDS: Final[Dict[str, float]] = {
-    "min_fps": 60.0,
-    "max_frame_time_ms": 16.6,
-    "max_gpu_temp": 85.0,
-    "alert_latency_ms": 100.0
-}
+# Expected refresh rate range constants
+MIN_REFRESH_RATE = 30
+MAX_REFRESH_RATE = 360
 
-# Configuration for telemetry sampling
-TELEMETRY_SETTINGS: Final[Dict[str, int]] = {
-    "buffer_size": 1024,
-    "sample_interval_ms": 500,
-    "retry_attempts": 3
-}
+# Data storage defaults
+DEFAULT_SAMPLE_RATE = 60
+STORAGE_FILE_EXTENSION = '.perf'
 
-def get_metric_type(metric_name: str) -> str:
-    """Returns the data type string for a given metric."""
-    return GAME_METRICS_SCHEMA.get(metric_name, "float")
+# Validation constraints for telemetry processing
+MAX_LATENCY_MS = 500
+MIN_CPU_USAGE_PERCENT = 0.0
+MAX_CPU_USAGE_PERCENT = 100.0
 
-def is_within_limits(metric: str, value: float) -> bool:
-    """Checks if a metric value stays under warning limits."""
-    if "temp" in metric:
-        return value <= PERF_THRESHOLDS["max_gpu_temp"]
-    if metric == "frame_time_ms":
-        return value <= PERF_THRESHOLDS["max_frame_time_ms"]
-    return True
+def get_threshold_by_tier(tier: PerformanceTier) -> float:
+    """Return frame time limit for a given performance tier."""
+    return FRAME_TIME_THRESHOLDS.get(tier, 16.6)
+
+# Configuration labels for logging
+LOGGER_NAME = 'game-performance-86'
+VERSION = '1.0.4'
