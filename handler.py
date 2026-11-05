@@ -1,33 +1,35 @@
-import json
-from typing import Dict, List, Any, Optional
+from typing import List, Dict, Optional
 
-def sanitize_game_metrics(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Cleans raw telemetry data for processing."""
-    required_fields = {'session_id', 'fps', 'ping'}
-    
-    # Filter to only known valid metrics
-    sanitized = {
-        k: v for k, v in data.items() 
-        if k in required_fields and v is not None
-    }
-    
-    # Enforce type constraints for performance analysis
-    if 'fps' in sanitized:
-        sanitized['fps'] = float(sanitized['fps'])
-    if 'ping' in sanitized:
-        sanitized['ping'] = int(sanitized['ping'])
-        
-    return sanitized
+class GamePerformanceHandler:
+    """Handles performance metrics for game sessions."""
 
-def batch_process_metrics(metrics: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Processes list of metrics and returns valid entries."""
-    return [sanitize_game_metrics(m) for m in metrics if all(k in m for k in ['session_id'])]
+    def __init__(self, session_id: str, threshold: float = 60.0) -> None:
+        self.session_id: str = session_id
+        self.threshold: float = threshold
+        self.metrics: List[float] = []
 
-def export_metrics_to_json(metrics: List[Dict[str, Any]], filepath: str) -> bool:
-    """Persists processed metrics to local storage."""
-    try:
-        with open(filepath, 'w') as f:
-            json.dump(metrics, f, indent=4)
-        return True
-    except (IOError, TypeError):
-        return False
+    def add_metric(self, fps: float) -> None:
+        """Record a new frame rate measurement."""
+        self.metrics.append(fps)
+
+    def get_average_fps(self) -> float:
+        """Calculate the average FPS for the session."""
+        if not self.metrics:
+            return 0.0
+        return sum(self.metrics) / len(self.metrics)
+
+    def check_stability(self) -> Dict[str, bool]:
+        """Check if current performance meets target thresholds."""
+        avg_fps: float = self.get_average_fps()
+        return {
+            "is_stable": avg_fps >= self.threshold,
+            "needs_optimization": avg_fps < self.threshold
+        }
+
+    def export_report(self) -> Dict[str, Optional[str]]:
+        """Export session summary to a structured format."""
+        return {
+            "session": self.session_id,
+            "avg_fps": str(self.get_average_fps()),
+            "status": "optimal" if self.check_stability()["is_stable"] else "degraded"
+        }
