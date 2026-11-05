@@ -1,21 +1,32 @@
+import json
 import os
-from dataclasses import dataclass
+from typing import Any, Dict
 
-@dataclass(frozen=True)
-class GameConfig:
-    target_fps: int = 144
-    render_scale: float = 1.0
-    enable_vsync: bool = False
-    max_texture_memory: int = 4096
+DEFAULT_CONFIG = {
+    "resolution": [1920, 1080],
+    "fullscreen": True,
+    "target_fps": 60,
+    "vsync": True
+}
 
-def load_performance_settings() -> GameConfig:
-    """Parses environment overrides for game engine optimization."""
-    return GameConfig(
-        target_fps=int(os.getenv("GAME_FPS", 144)),
-        render_scale=float(os.getenv("GAME_SCALE", 1.0)),
-        enable_vsync=os.getenv("GAME_VSYNC", "false").lower() == "true",
-        max_texture_memory=int(os.getenv("GAME_VRAM_LIMIT", 4096))
-    )
+def load_config(filepath: str) -> Dict[str, Any]:
+    """Load configuration from JSON with fallback to defaults."""
+    config = DEFAULT_CONFIG.copy()
+    
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, 'r') as f:
+                user_data = json.load(f)
+                config.update(user_data)
+        except (json.JSONDecodeError, IOError):
+            print(f"Warning: Could not parse {filepath}, using defaults.")
+    
+    return config
 
-# Global configuration instance
-settings = load_performance_settings()
+def save_config(filepath: str, config: Dict[str, Any]) -> None:
+    """Persist current configuration settings to disk."""
+    try:
+        with open(filepath, 'w') as f:
+            json.dump(config, f, indent=4)
+    except IOError as e:
+        print(f"Error saving config to {filepath}: {e}")
