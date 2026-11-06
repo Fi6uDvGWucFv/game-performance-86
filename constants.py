@@ -1,38 +1,32 @@
-import enum
+import os
 
-# Gaming performance metrics and configuration thresholds
+# Performance metrics thresholds for gaming engine
+MAX_FRAME_TIME_MS = 16.67
+TARGET_FPS = 60
 
-class PerformanceTier(enum.Enum):
-    ULTRA = 'ultra'
-    HIGH = 'high'
-    MEDIUM = 'medium'
-    LOW = 'low'
+# Resource management constants
+MEMORY_BUFFER_LIMIT_MB = 1024
+CACHE_EXPIRATION_SECONDS = 300
 
-# Frame time thresholds in milliseconds
-FRAME_TIME_THRESHOLDS = {
-    PerformanceTier.ULTRA: 16.6,
-    PerformanceTier.HIGH: 33.3,
-    PerformanceTier.MEDIUM: 50.0,
-    PerformanceTier.LOW: 100.0
-}
+# System configurations for performance tuning
+DEFAULT_THREAD_POOL_SIZE = os.cpu_count() or 4
+ENABLE_GPU_ACCELERATION = True
 
-# Expected refresh rate range constants
-MIN_REFRESH_RATE = 30
-MAX_REFRESH_RATE = 360
+# File paths and directory structure
+LOG_DIR = 'logs/performance/'
+TEMP_DATA_DIR = 'tmp/cache/'
 
-# Data storage defaults
-DEFAULT_SAMPLE_RATE = 60
-STORAGE_FILE_EXTENSION = '.perf'
+# Network timeout settings
+CONNECTION_TIMEOUT_SEC = 5.0
+REQUEST_RETRY_ATTEMPTS = 3
 
-# Validation constraints for telemetry processing
-MAX_LATENCY_MS = 500
-MIN_CPU_USAGE_PERCENT = 0.0
-MAX_CPU_USAGE_PERCENT = 100.0
+# Validation ranges
+MIN_RESOLUTION_WIDTH = 800
+MIN_RESOLUTION_HEIGHT = 600
 
-def get_threshold_by_tier(tier: PerformanceTier) -> float:
-    """Return frame time limit for a given performance tier."""
-    return FRAME_TIME_THRESHOLDS.get(tier, 16.6)
-
-# Configuration labels for logging
-LOGGER_NAME = 'game-performance-86'
-VERSION = '1.0.4'
+def get_performance_config():
+    return {
+        'target_fps': TARGET_FPS,
+        'max_frame_time': MAX_FRAME_TIME_MS,
+        'gpu_enabled': ENABLE_GPU_ACCELERATION
+    }
